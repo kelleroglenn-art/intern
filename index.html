@@ -8,6 +8,8 @@
 <title>Keller och Glenn — Hämtning</title>
 <script src="https://unpkg.com/@zxing/library@0.19.1/umd/index.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -34,11 +36,11 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--i
 .start-h { font-family: 'Syne', sans-serif; font-size: 36px; font-weight: 800; line-height: 1.05; margin-bottom: 6px; }
 .start-sub { font-family: 'DM Mono', monospace; font-size: 12px; color: #777; }
 .name-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: #2a2520; border-top: 1px solid #2a2520; flex: 1; }
-.name-btn { background: #1c1814; border: none; color: var(--bg); font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; padding: 28px 18px; cursor: pointer; text-align: left; transition: background .15s; }
+.name-btn { background: #1c1814; border: none; color: var(--bg); font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; padding: 28px 18px; cursor: pointer; text-align: left; }
 .name-btn:active { background: #2a2520; }
-.name-btn.store { background: #1a2a1a; color: #7aba7a; font-size: 16px; display: flex; align-items: center; gap: 10px; }
+.name-btn.store { background: #1a2a1a; color: #7aba7a; font-size: 16px; display: flex; align-items: center; gap: 10px; position: relative; }
 .name-btn.store:active { background: #223322; }
-.start-footer { background: #0e0e0e; padding: 0; }
+.store-badge { position: absolute; top: 12px; right: 12px; background: var(--accent); color: #fff; font-family: 'DM Mono', monospace; font-size: 11px; border-radius: 20px; padding: 2px 8px; display: none; }
 
 /* ── HEADER ── */
 .hdr { background: var(--ink); color: var(--bg); padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
@@ -66,20 +68,9 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--i
 .btn-red { background: var(--accent); color: #fff; }
 .btn-green { background: var(--green); color: #fff; }
 .btn-outline { background: var(--surface); color: var(--ink); border: 2px solid var(--border); margin-top: 11px; }
-.btn-blue { background: var(--blue); color: #fff; }
 
-/* ── SCANNER BOX ── */
-.scanner-box {
-  position: relative;
-  background: #000;
-  border-radius: 14px;
-  overflow: hidden;
-  margin-bottom: 14px;
-  min-height: 200px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+/* ── SCANNER ── */
+.scanner-box { position: relative; background: #000; border-radius: 14px; overflow: hidden; margin-bottom: 14px; min-height: 200px; display: flex; align-items: center; justify-content: center; }
 .scanner-box video { width: 100%; display: block; border-radius: 14px; }
 .scanner-box canvas { display: none; }
 .scan-placeholder { text-align: center; padding: 40px 20px; color: #555; }
@@ -87,9 +78,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--i
 .scan-placeholder p { font-size: 13px; }
 .scan-corners { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 220px; height: 80px; pointer-events: none; display: none; }
 .scanner-box.scanner-active .scan-corners { display: block; }
-.scan-corners::before, .scan-corners::after, .scan-ci::before, .scan-ci::after {
-  content: ''; position: absolute; width: 20px; height: 20px; border-color: var(--accent); border-style: solid;
-}
+.scan-corners::before, .scan-corners::after, .scan-ci::before, .scan-ci::after { content: ''; position: absolute; width: 20px; height: 20px; border-color: var(--accent); border-style: solid; }
 .scan-corners::before { top:0;left:0;border-width:2px 0 0 2px; }
 .scan-corners::after  { top:0;right:0;border-width:2px 2px 0 0; }
 .scan-ci::before { bottom:0;left:0;border-width:0 0 2px 2px; }
@@ -97,44 +86,24 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--i
 .scan-line { position: absolute; left:4px; right:4px; height:2px; background:var(--accent); box-shadow:0 0 8px var(--accent); animation: scanAnim 1.5s ease-in-out infinite; display:none; }
 .scanner-box.scanner-active .scan-line { display: block; }
 @keyframes scanAnim { 0%,100%{top:10%} 50%{top:85%} }
-
 .btn-cam { width: 100%; background: var(--blue); color: #fff; border: none; border-radius: 10px; padding: 15px; font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; margin-bottom: 14px; }
 .btn-cam.scanning { background: var(--accent); }
 .btn-cam:active { opacity: .85; }
 
-/* ── SCAN RESULT CARD (shown after scan) ── */
-.scan-result-card {
-  display: none;
-  background: var(--surface);
-  border: 2px solid var(--accent);
-  border-radius: 14px;
-  padding: 16px;
-  margin-bottom: 14px;
-}
+/* ── RESULT CARD ── */
+.scan-result-card { display: none; background: var(--surface); border: 2px solid var(--accent); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
 .scan-result-card.visible { display: block; }
 .scan-result-bc { text-align: center; margin-bottom: 14px; }
 .scan-result-bc svg { max-width: 100%; height: auto; display: block; margin: 0 auto; }
 .scan-result-fields { display: flex; flex-direction: column; gap: 10px; }
-.field-input {
-  width: 100%;
-  background: var(--bg);
-  border: 2px solid var(--border);
-  border-radius: 9px;
-  padding: 13px 14px;
-  font-family: 'DM Mono', monospace;
-  font-size: 20px;
-  font-weight: 500;
-  color: var(--ink);
-  outline: none;
-  text-align: center;
-}
+.field-input { width: 100%; background: var(--bg); border: 2px solid var(--border); border-radius: 9px; padding: 13px 14px; font-family: 'DM Mono', monospace; font-size: 22px; font-weight: 500; color: var(--ink); outline: none; text-align: center; }
 .field-input:focus { border-color: var(--blue); }
-.field-input::placeholder { color: #ccc; font-size: 15px; font-weight: 400; text-align: center; }
+.field-input::placeholder { color: #ccc; font-size: 15px; font-weight: 400; }
 .field-input.note { font-size: 16px; text-align: left; }
 .scan-result-btns { display: flex; gap: 9px; margin-top: 12px; }
 .scan-result-btns .btn { margin: 0; flex: 1; padding: 14px; font-size: 15px; }
 
-/* ── MANUAL INPUT ── */
+/* ── MANUAL ── */
 .manual-row { display: flex; gap: 8px; margin-bottom: 16px; }
 .manual-in { flex: 1; background: var(--surface); border: 2px solid var(--border); border-radius: 9px; padding: 12px 14px; font-family: 'DM Mono', monospace; font-size: 15px; color: var(--ink); outline: none; }
 .manual-in:focus { border-color: var(--blue); }
@@ -142,17 +111,15 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--i
 .btn-add { background: var(--ink); color: #fff; border: none; border-radius: 9px; padding: 12px 16px; font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; }
 .btn-add:active { opacity: .8; }
 
-/* ── ITEMS LIST ── */
+/* ── ITEMS ── */
 .items-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
 .items-lbl { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; }
 .count-pill { background: var(--accent); color: #fff; font-family: 'DM Mono', monospace; font-size: 11px; border-radius: 20px; padding: 2px 8px; }
 .empty { text-align: center; padding: 28px 16px; color: var(--muted); font-size: 14px; line-height: 1.5; }
-
 .item-card { background: var(--surface); border: 2px solid var(--border); border-radius: 11px; padding: 14px; margin-bottom: 10px; position: relative; }
 .item-bc-wrap { text-align: center; margin-bottom: 10px; }
 .item-bc-wrap svg { max-width: 100%; height: auto; display: block; margin: 0 auto; }
 .item-meta { display: flex; align-items: center; justify-content: space-between; }
-.item-info { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); }
 .item-kulor { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--blue); margin-top: 2px; }
 .item-qty-badge { background: var(--ink); color: #fff; font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500; padding: 4px 12px; border-radius: 20px; }
 .del-btn { position: absolute; top: 10px; right: 10px; background: none; border: none; color: #ccc; font-size: 18px; cursor: pointer; padding: 2px; line-height: 1; }
@@ -162,7 +129,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--i
 .bottom-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg); border-top: 1px solid var(--border); padding: 11px 18px 26px; display: flex; gap: 9px; }
 .bottom-bar .btn { margin: 0; }
 
-/* ── SUMMARY / TEXTAREA ── */
+/* ── SUMMARY ── */
 .summary-box { background: var(--surface); border: 2px solid var(--border); border-radius: 11px; padding: 14px 16px; margin-bottom: 22px; }
 .sum-row { display: flex; justify-content: space-between; align-items: baseline; font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); margin-bottom: 5px; }
 .sum-row:last-child { margin-bottom: 0; }
@@ -185,7 +152,7 @@ textarea.field::placeholder { color: #ccc; }
 .store-order-hdr:active { opacity: .85; }
 .store-order-name { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 800; }
 .store-order-proj { font-family: 'DM Mono', monospace; font-size: 12px; color: #aaa; margin-top: 2px; }
-.store-order-time { font-family: 'DM Mono', monospace; font-size: 11px; color: #888; }
+.store-order-time { font-family: 'DM Mono', monospace; font-size: 11px; color: #888; text-align: right; }
 .store-order-body { padding: 16px; display: none; }
 .store-order-body.open { display: block; }
 .store-item { padding: 14px 0; border-bottom: 1px solid var(--border); text-align: center; }
@@ -201,11 +168,13 @@ textarea.field::placeholder { color: #ccc; }
 .store-empty { text-align: center; padding: 60px 20px; color: var(--muted); }
 .store-empty .icon { font-size: 48px; margin-bottom: 12px; }
 .store-empty p { font-size: 15px; }
-.new-badge { display: inline-block; width: 10px; height: 10px; background: var(--accent); border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+.new-dot { display: inline-block; width: 9px; height: 9px; background: var(--accent); border-radius: 50%; margin-right: 7px; vertical-align: middle; }
+.loading { text-align: center; padding: 40px; color: var(--muted); font-family: 'DM Mono', monospace; font-size: 13px; }
 
 /* ── TOAST ── */
 #toast { position: fixed; top: 66px; left: 50%; transform: translateX(-50%); background: var(--green); color: #fff; font-family: 'DM Mono', monospace; font-size: 13px; padding: 7px 18px; border-radius: 20px; z-index: 999; opacity: 0; transition: opacity .25s; pointer-events: none; white-space: nowrap; }
 #toast.show { opacity: 1; }
+#toast.error { background: var(--accent); }
 </style>
 </head>
 <body>
@@ -225,7 +194,10 @@ textarea.field::placeholder { color: #ccc; }
     <button class="name-btn" onclick="pickName('Ester')">Ester</button>
     <button class="name-btn" onclick="pickName('Wille')">Wille</button>
     <button class="name-btn" onclick="pickName('Johannes')">Johannes</button>
-    <button class="name-btn store" onclick="openStore()">🏪 Butiken</button>
+    <button class="name-btn store" id="store-btn" onclick="openStore()">
+      🏪 Butiken
+      <span class="store-badge" id="store-badge"></span>
+    </button>
   </div>
 </div>
 
@@ -260,8 +232,6 @@ textarea.field::placeholder { color: #ccc; }
   </div>
   <div class="content" style="padding-bottom:90px;">
     <div class="step-tag">Steg 2 av 3</div>
-
-    <!-- Scanner -->
     <div class="scanner-box" id="scanner-box">
       <div class="scan-placeholder" id="scan-ph">
         <div class="icon">📷</div>
@@ -272,8 +242,6 @@ textarea.field::placeholder { color: #ccc; }
       <div class="scan-line"></div>
     </div>
     <button class="btn-cam" id="cam-btn" onclick="toggleScanner()">📷 Starta kamera</button>
-
-    <!-- Result card: shown after each scan -->
     <div class="scan-result-card" id="result-card">
       <div class="scan-result-bc" id="result-bc-svg"></div>
       <div class="scan-result-fields">
@@ -285,14 +253,10 @@ textarea.field::placeholder { color: #ccc; }
         <button class="btn btn-green" onclick="confirmResult()">✓ Lägg till</button>
       </div>
     </div>
-
-    <!-- Manual -->
     <div class="manual-row">
-      <input class="manual-in" id="manual-in" type="text" inputmode="numeric" placeholder="Ange streckkod manuellt…">
+      <input class="manual-in" id="manual-in" type="text" inputmode="numeric" placeholder="Eller ange streckkod manuellt…">
       <button class="btn-add" onclick="addManual()">+ Lägg till</button>
     </div>
-
-    <!-- List -->
     <div class="items-hdr">
       <div class="items-lbl">Produkter</div>
       <div class="count-pill" id="item-count">0</div>
@@ -321,7 +285,7 @@ textarea.field::placeholder { color: #ccc; }
     <div class="summary-box" id="summary-box"></div>
     <label class="lbl">MEDDELANDE TILL BUTIKEN (valfritt)</label>
     <textarea class="field" id="msg-in" placeholder="Skriv ett meddelande om det behövs…"></textarea>
-    <button class="btn btn-red" style="margin-top:20px;" onclick="sendOrder()">📤 Skicka beställning</button>
+    <button class="btn btn-red" style="margin-top:20px;" id="send-btn" onclick="sendOrder()">📤 Skicka beställning</button>
     <button class="btn btn-outline" onclick="go('s-scan')">← Tillbaka</button>
   </div>
 </div>
@@ -340,22 +304,39 @@ textarea.field::placeholder { color: #ccc; }
   <div class="hdr">
     <div>
       <div class="hdr-title">Butiken</div>
-      <div class="hdr-sub">Dagens beställningar</div>
+      <div class="hdr-sub">Läs av med scannern — radera när klar</div>
     </div>
     <button class="hdr-back" onclick="go('s-start')">✕</button>
   </div>
-  <div class="content" id="store-content" style="padding-bottom: 20px;"></div>
+  <div class="content" id="store-content" style="padding-bottom:20px;">
+    <div class="loading">Hämtar beställningar…</div>
+  </div>
 </div>
 
 <div id="toast"></div>
 
 <script>
+// ── FIREBASE CONFIG ──────────────────────────
+var firebaseConfig = {
+  apiKey: "AIzaSyBmMWfTtTFzj2-TG1M-zcyD3CNwxBZU54c",
+  authDomain: "keller-glenn.firebaseapp.com",
+  projectId: "keller-glenn",
+  storageBucket: "keller-glenn.firebasestorage.app",
+  messagingSenderId: "476962061001",
+  appId: "1:476962061001:web:f1251f19b4990fe0226b18"
+};
+firebase.initializeApp(firebaseConfig);
+var db = firebase.firestore();
+var ordersRef = db.collection('orders');
+
+// ── STATE ────────────────────────────────────
 var state = { name: '', project: '', items: [] };
 var pendingCode = '';
 var scannerActive = false;
 var zxingReader = null;
 var lastCode = '', lastTime = 0;
 var toastTimer = null;
+var storeUnsubscribe = null;
 
 // ── NAV ──────────────────────────────────────
 function go(id) {
@@ -364,13 +345,27 @@ function go(id) {
   window.scrollTo(0, 0);
 }
 
-function showToast(msg) {
+function showToast(msg, isError) {
   var el = document.getElementById('toast');
   el.textContent = msg;
+  el.classList.remove('error');
+  if (isError) el.classList.add('error');
   el.classList.add('show');
   if (toastTimer) clearTimeout(toastTimer);
   toastTimer = setTimeout(function() { el.classList.remove('show'); }, 2000);
 }
+
+// ── LIVE BADGE ON START ───────────────────────
+ordersRef.onSnapshot(function(snap) {
+  var count = snap.size;
+  var badge = document.getElementById('store-badge');
+  if (count > 0) {
+    badge.textContent = count;
+    badge.style.display = 'inline-block';
+  } else {
+    badge.style.display = 'none';
+  }
+});
 
 // ── START ────────────────────────────────────
 function pickName(name) {
@@ -379,11 +374,6 @@ function pickName(name) {
   document.getElementById('proj-in').value = '';
   document.getElementById('proj-btn').disabled = true;
   go('s-project');
-}
-
-function openStore() {
-  renderStore();
-  go('s-store');
 }
 
 // ── PROJECT ──────────────────────────────────
@@ -409,11 +399,7 @@ function goBack() {
 
 // ── SCANNER ──────────────────────────────────
 function toggleScanner() {
-  if (scannerActive) {
-    stopScanner();
-  } else {
-    startScanner();
-  }
+  if (scannerActive) { stopScanner(); } else { startScanner(); }
 }
 
 function startScanner() {
@@ -422,18 +408,14 @@ function startScanner() {
   document.getElementById('scan-ph').style.display = 'none';
   document.getElementById('cam-btn').textContent = '⏹ Stoppa kamera';
   document.getElementById('cam-btn').classList.add('scanning');
-
   try {
     var hints = new Map();
     hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
-      ZXing.BarcodeFormat.EAN_13,
-      ZXing.BarcodeFormat.EAN_8,
-      ZXing.BarcodeFormat.CODE_128,
-      ZXing.BarcodeFormat.CODE_39,
+      ZXing.BarcodeFormat.EAN_13, ZXing.BarcodeFormat.EAN_8,
+      ZXing.BarcodeFormat.CODE_128, ZXing.BarcodeFormat.CODE_39,
       ZXing.BarcodeFormat.UPC_A
     ]);
     hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
-
     zxingReader = new ZXing.BrowserMultiFormatReader(hints);
     zxingReader.decodeFromConstraints(
       { video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } } },
@@ -442,19 +424,17 @@ function startScanner() {
         if (result) {
           var code = result.getText();
           var now = Date.now();
-          // Debounce same code
           if (code === lastCode && (now - lastTime) < 3000) return;
           lastCode = code;
           lastTime = now;
           if (navigator.vibrate) navigator.vibrate([80, 30, 80]);
-          // Stop scanner and show result card
           stopScanner();
           showResultCard(code);
         }
       }
     );
   } catch(e) {
-    showToast('Kamera ej tillgänglig');
+    showToast('Kamera ej tillgänglig', true);
     stopScanner();
   }
 }
@@ -471,21 +451,13 @@ function stopScanner() {
 // ── RESULT CARD ──────────────────────────────
 function showResultCard(code) {
   pendingCode = code;
-  var card = document.getElementById('result-card');
   var svgWrap = document.getElementById('result-bc-svg');
-
-  // Draw barcode
   svgWrap.innerHTML = '<svg id="result-svg"></svg>';
   drawBarcode('result-svg', code);
-
   document.getElementById('result-qty').value = '';
   document.getElementById('result-note').value = '';
-  card.classList.add('visible');
-
-  // Focus qty field
-  setTimeout(function() {
-    document.getElementById('result-qty').focus();
-  }, 100);
+  document.getElementById('result-card').classList.add('visible');
+  setTimeout(function() { document.getElementById('result-qty').focus(); }, 100);
 }
 
 function hideResultCard() {
@@ -495,17 +467,16 @@ function hideResultCard() {
 
 function confirmResult() {
   if (!pendingCode) return;
-  var qtyVal = parseInt(document.getElementById('result-qty').value) || 1;
+  var qty = parseInt(document.getElementById('result-qty').value) || 1;
   var note = document.getElementById('result-note').value.trim();
-  state.items.push({ barcode: pendingCode, qty: qtyVal, note: note });
+  state.items.push({ barcode: pendingCode, qty: qty, note: note });
   renderItems();
   hideResultCard();
-  showToast('✓ Tillagd · ' + pendingCode);
+  showToast('✓ Tillagd');
 }
 
 function discardResult() {
   hideResultCard();
-  showToast('Kasserad');
 }
 
 // ── MANUAL ───────────────────────────────────
@@ -522,12 +493,10 @@ function renderItems() {
   var list = document.getElementById('items-list');
   document.getElementById('item-count').textContent = state.items.length;
   document.getElementById('scan-next').disabled = (state.items.length === 0);
-
   if (state.items.length === 0) {
     list.innerHTML = '<div class="empty">Inga produkter ännu.<br>Skanna eller skriv in en streckkod.</div>';
     return;
   }
-
   var html = '';
   for (var i = 0; i < state.items.length; i++) {
     var item = state.items[i];
@@ -535,7 +504,6 @@ function renderItems() {
       '<div class="item-bc-wrap"><svg id="bc' + i + '"></svg></div>' +
       '<div class="item-meta">' +
         '<div>' +
-          '<div class="item-info">' + item.barcode + '</div>' +
           (item.note ? '<div class="item-kulor">📝 ' + item.note + '</div>' : '') +
         '</div>' +
         '<div class="item-qty-badge">×' + item.qty + '</div>' +
@@ -544,7 +512,6 @@ function renderItems() {
     '</div>';
   }
   list.innerHTML = html;
-
   for (var j = 0; j < state.items.length; j++) {
     drawBarcode('bc' + j, state.items[j].barcode);
   }
@@ -555,18 +522,13 @@ function delItem(i) {
   renderItems();
 }
 
-// ── BARCODE RENDERING ─────────────────────────
+// ── BARCODE ──────────────────────────────────
 function drawBarcode(svgId, code) {
   try {
     JsBarcode('#' + svgId, code, {
-      format: guessFormat(code),
-      width: 2,
-      height: 55,
-      displayValue: true,
-      fontSize: 12,
-      margin: 6,
-      background: '#ffffff',
-      lineColor: '#000000'
+      format: guessFormat(code), width: 2, height: 55,
+      displayValue: true, fontSize: 12, margin: 6,
+      background: '#ffffff', lineColor: '#000000'
     });
   } catch(e) {
     var el = document.getElementById(svgId);
@@ -595,46 +557,44 @@ function goMsg() {
   go('s-msg');
 }
 
-// ── SEND ─────────────────────────────────────
+// ── SEND (Firebase) ───────────────────────────
 function sendOrder() {
+  var btn = document.getElementById('send-btn');
+  btn.disabled = true;
+  btn.textContent = 'Skickar…';
+
   var msg = document.getElementById('msg-in').value.trim();
-  var now = new Date();
   var order = {
-    id: Date.now(),
     name: state.name,
     project: state.project,
     items: JSON.parse(JSON.stringify(state.items)),
     message: msg,
-    time: now.toISOString(),
+    time: firebase.firestore.FieldValue.serverTimestamp(),
     read: false
   };
 
-  var orders = [];
-  try { orders = JSON.parse(localStorage.getItem('kg_orders') || '[]'); } catch(e) {}
-  orders.unshift(order);
-  localStorage.setItem('kg_orders', JSON.stringify(orders));
+  ordersRef.add(order).then(function() {
+    // Also send WhatsApp
+    var now = new Date();
+    var lines = ['🔵 Ny beställning — Keller & Glenn', '👷 ' + order.name, '📋 Projekt: ' + order.project, ''];
+    for (var i = 0; i < order.items.length; i++) {
+      var item = order.items[i];
+      var row = '• ' + item.barcode + '  ×' + item.qty;
+      if (item.note) row += '  (' + item.note + ')';
+      lines.push(row);
+    }
+    if (msg) { lines.push(''); lines.push('💬 ' + msg); }
+    var waUrl = 'https://wa.me/?text=' + encodeURIComponent(lines.join('\n'));
 
-  // WhatsApp
-  var timeStr = now.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
-  var lines = [
-    '🔵 Ny beställning — Keller & Glenn',
-    '👷 ' + order.name,
-    '📋 Projekt: ' + order.project,
-    '🕐 ' + timeStr, ''
-  ];
-  for (var i = 0; i < order.items.length; i++) {
-    var item = order.items[i];
-    var row = '• ' + item.barcode + '  ×' + item.qty;
-    if (item.note) row += '  (' + item.note + ')';
-    lines.push(row);
-  }
-  if (msg) { lines.push(''); lines.push('💬 ' + msg); }
-
-  var waUrl = 'https://wa.me/?text=' + encodeURIComponent(lines.join('\n'));
-  document.getElementById('confirm-p').textContent = 'Beställning från ' + order.name + ' är skickad.';
-  document.getElementById('confirm-d').textContent = order.project + ' · ' + order.items.length + ' artiklar';
-  go('s-confirm');
-  setTimeout(function() { window.open(waUrl, '_blank'); }, 400);
+    document.getElementById('confirm-p').textContent = 'Beställning från ' + order.name + ' är skickad.';
+    document.getElementById('confirm-d').textContent = order.project + ' · ' + order.items.length + ' artiklar';
+    go('s-confirm');
+    setTimeout(function() { window.open(waUrl, '_blank'); }, 400);
+  }).catch(function(err) {
+    showToast('Fel: ' + err.message, true);
+    btn.disabled = false;
+    btn.textContent = '📤 Skicka beställning';
+  });
 }
 
 function reset() {
@@ -642,21 +602,35 @@ function reset() {
   go('s-start');
 }
 
-// ── BUTIKEN ───────────────────────────────────
-function renderStore() {
-  var orders = [];
-  try { orders = JSON.parse(localStorage.getItem('kg_orders') || '[]'); } catch(e) {}
-  var el = document.getElementById('store-content');
+// ── BUTIKEN (live) ────────────────────────────
+function openStore() {
+  go('s-store');
+  document.getElementById('store-content').innerHTML = '<div class="loading">Hämtar beställningar…</div>';
 
+  if (storeUnsubscribe) storeUnsubscribe();
+  storeUnsubscribe = ordersRef.orderBy('time', 'desc').onSnapshot(function(snap) {
+    var orders = [];
+    snap.forEach(function(doc) {
+      var d = doc.data();
+      d.id = doc.id;
+      orders.push(d);
+    });
+    renderStore(orders);
+  }, function(err) {
+    document.getElementById('store-content').innerHTML = '<div class="empty">Kunde inte hämta beställningar.<br>' + err.message + '</div>';
+  });
+}
+
+function renderStore(orders) {
+  var el = document.getElementById('store-content');
   if (orders.length === 0) {
     el.innerHTML = '<div class="store-empty"><div class="icon">✅</div><p>Inga beställningar att hantera</p></div>';
     return;
   }
-
   var html = '';
   for (var i = 0; i < orders.length; i++) {
     var order = orders[i];
-    var t = new Date(order.time);
+    var t = order.time ? order.time.toDate() : new Date();
     var ts = t.toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'short' }) + ' ' +
              t.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
     var tot = 0;
@@ -675,57 +649,52 @@ function renderStore() {
     }
 
     html += '<div class="store-order">' +
-      '<div class="store-order-hdr" onclick="toggleStoreOrder(' + i + ')">' +
+      '<div class="store-order-hdr" onclick="toggleStoreOrder(' + i + ',\'' + order.id + '\')">' +
         '<div>' +
           '<div class="store-order-name">' +
-            (!order.read ? '<span class="new-badge"></span>' : '') +
-            order.name +
+            (!order.read ? '<span class="new-dot"></span>' : '') + order.name +
           '</div>' +
           '<div class="store-order-proj">Projekt ' + order.project + ' · ' + order.items.length + ' art. · ' + tot + ' st</div>' +
         '</div>' +
         '<div class="store-order-time">' + ts + '</div>' +
       '</div>' +
-      '<div class="store-order-body" id="sb' + i + '">' +
+      '<div class="store-order-body" id="sb' + i + '" data-orderid="' + order.id + '">' +
         itemsHtml +
         (order.message ? '<div class="store-msg"><div class="store-msg-lbl">Meddelande</div>' + order.message + '</div>' : '') +
-        '<button class="store-delete-btn" onclick="deleteOrder(' + i + ',event)">🗑 Radera beställning</button>' +
+        '<button class="store-delete-btn" onclick="deleteOrder(\'' + order.id + '\',event)">🗑 Radera beställning</button>' +
       '</div>' +
     '</div>';
   }
   el.innerHTML = html;
 }
 
-function toggleStoreOrder(i) {
+function toggleStoreOrder(i, orderId) {
   var el = document.getElementById('sb' + i);
   var wasOpen = el.classList.contains('open');
   el.classList.toggle('open');
-
   if (!wasOpen) {
     // Render barcodes
-    var orders = [];
-    try { orders = JSON.parse(localStorage.getItem('kg_orders') || '[]'); } catch(e) {}
-    var order = orders[i];
-    if (order) {
-      for (var k = 0; k < order.items.length; k++) {
-        drawBarcode('sbc' + i + '_' + k, order.items[k].barcode);
+    ordersRef.doc(orderId).get().then(function(doc) {
+      if (doc.exists) {
+        var order = doc.data();
+        for (var k = 0; k < order.items.length; k++) {
+          drawBarcode('sbc' + i + '_' + k, order.items[k].barcode);
+        }
+        // Mark as read
+        if (!order.read) {
+          ordersRef.doc(orderId).update({ read: true });
+        }
       }
-      // Mark as read
-      if (!order.read) {
-        order.read = true;
-        localStorage.setItem('kg_orders', JSON.stringify(orders));
-      }
-    }
+    });
   }
 }
 
-function deleteOrder(i, e) {
+function deleteOrder(orderId, e) {
   e.stopPropagation();
   if (!confirm('Radera beställningen? Den försvinner permanent.')) return;
-  var orders = [];
-  try { orders = JSON.parse(localStorage.getItem('kg_orders') || '[]'); } catch(e) {}
-  orders.splice(i, 1);
-  localStorage.setItem('kg_orders', JSON.stringify(orders));
-  renderStore();
+  ordersRef.doc(orderId).delete().catch(function(err) {
+    showToast('Kunde inte radera: ' + err.message, true);
+  });
 }
 </script>
 </body>
