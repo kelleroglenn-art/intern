@@ -5,31 +5,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Keller och Glenn — Hämtning</title>
+<title>Keller och Glenn</title>
 <script src="https://unpkg.com/@zxing/library@0.19.1/umd/index.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #F5F0E8;
-  --surface: #fff;
-  --ink: #1A1410;
-  --muted: #8A8070;
-  --accent: #C8430A;
-  --blue: #2B5EA7;
-  --border: #DDD8CC;
-  --green: #2D7A4F;
+  --bg: #F5F0E8; --surface: #fff; --ink: #1A1410; --muted: #8A8070;
+  --accent: #C8430A; --blue: #2B5EA7; --border: #DDD8CC; --green: #2D7A4F;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 html, body { height: 100%; }
 body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--ink); overflow-x: hidden; }
-
 .screen { display: none; min-height: 100dvh; flex-direction: column; }
 .screen.active { display: flex; }
 
-/* ── START ── */
 #s-start { background: var(--ink); color: var(--bg); }
 .start-top { padding: 44px 28px 24px; }
 .start-brand { font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; color: var(--accent); margin-bottom: 16px; }
@@ -42,26 +32,21 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--i
 .name-btn.store:active { background: #223322; }
 .store-badge { position: absolute; top: 12px; right: 12px; background: var(--accent); color: #fff; font-family: 'DM Mono', monospace; font-size: 11px; border-radius: 20px; padding: 2px 8px; display: none; }
 
-/* ── HEADER ── */
 .hdr { background: var(--ink); color: var(--bg); padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
 .hdr-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 800; }
 .hdr-sub { font-family: 'DM Mono', monospace; font-size: 11px; color: #888; margin-top: 2px; }
 .hdr-back { background: none; border: none; color: #888; font-size: 20px; cursor: pointer; padding: 4px; line-height: 1; }
 
-/* ── CONTENT ── */
 .content { padding: 24px 20px; flex: 1; }
 .step-tag { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: .12em; text-transform: uppercase; margin-bottom: 6px; }
 .page-h { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; line-height: 1.1; margin-bottom: 24px; }
 .lbl { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: .07em; margin-bottom: 7px; display: block; }
 
-/* ── PROJECT ── */
 .proj-wrap { display: flex; align-items: center; background: var(--surface); border: 2px solid var(--border); border-radius: 10px; padding: 13px 16px; margin-bottom: 24px; }
 .proj-wrap:focus-within { border-color: var(--blue); }
-.proj-prefix { font-family: 'DM Mono', monospace; font-size: 22px; color: var(--muted); }
 .proj-wrap input { border: none; outline: none; font-family: 'DM Mono', monospace; font-size: 22px; font-weight: 500; color: var(--ink); background: transparent; width: 100%; }
 .proj-wrap input::placeholder { color: #ccc; font-weight: 400; font-size: 17px; }
 
-/* ── BUTTONS ── */
 .btn { width: 100%; border: none; border-radius: 11px; padding: 17px; font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; cursor: pointer; transition: opacity .15s, transform .1s; }
 .btn:active { opacity: .82; transform: scale(.98); }
 .btn:disabled { opacity: .3; }
@@ -69,7 +54,6 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--i
 .btn-green { background: var(--green); color: #fff; }
 .btn-outline { background: var(--surface); color: var(--ink); border: 2px solid var(--border); margin-top: 11px; }
 
-/* ── SCANNER ── */
 .scanner-box { position: relative; background: #000; border-radius: 14px; overflow: hidden; margin-bottom: 14px; min-height: 200px; display: flex; align-items: center; justify-content: center; }
 .scanner-box video { width: 100%; display: block; border-radius: 14px; }
 .scanner-box canvas { display: none; }
@@ -78,108 +62,99 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--i
 .scan-placeholder p { font-size: 13px; }
 .scan-corners { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 220px; height: 80px; pointer-events: none; display: none; }
 .scanner-box.scanner-active .scan-corners { display: block; }
-.scan-corners::before, .scan-corners::after, .scan-ci::before, .scan-ci::after { content: ''; position: absolute; width: 20px; height: 20px; border-color: var(--accent); border-style: solid; }
-.scan-corners::before { top:0;left:0;border-width:2px 0 0 2px; }
-.scan-corners::after  { top:0;right:0;border-width:2px 2px 0 0; }
-.scan-ci::before { bottom:0;left:0;border-width:0 0 2px 2px; }
-.scan-ci::after  { bottom:0;right:0;border-width:0 2px 2px 0; }
-.scan-line { position: absolute; left:4px; right:4px; height:2px; background:var(--accent); box-shadow:0 0 8px var(--accent); animation: scanAnim 1.5s ease-in-out infinite; display:none; }
-.scanner-box.scanner-active .scan-line { display: block; }
-@keyframes scanAnim { 0%,100%{top:10%} 50%{top:85%} }
-.btn-cam { width: 100%; background: var(--blue); color: #fff; border: none; border-radius: 10px; padding: 15px; font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; margin-bottom: 14px; }
-.btn-cam.scanning { background: var(--accent); }
-.btn-cam:active { opacity: .85; }
+.scan-corners::before,.scan-corners::after,.scan-ci::before,.scan-ci::after { content:''; position:absolute; width:20px; height:20px; border-color:var(--accent); border-style:solid; }
+.scan-corners::before{top:0;left:0;border-width:2px 0 0 2px}
+.scan-corners::after{top:0;right:0;border-width:2px 2px 0 0}
+.scan-ci::before{bottom:0;left:0;border-width:0 0 2px 2px}
+.scan-ci::after{bottom:0;right:0;border-width:0 2px 2px 0}
+.scan-line { position:absolute; left:4px; right:4px; height:2px; background:var(--accent); box-shadow:0 0 8px var(--accent); animation:scanAnim 1.5s ease-in-out infinite; display:none; }
+.scanner-box.scanner-active .scan-line { display:block; }
+@keyframes scanAnim{0%,100%{top:10%}50%{top:85%}}
+.btn-cam { width:100%; background:var(--blue); color:#fff; border:none; border-radius:10px; padding:15px; font-family:'Syne',sans-serif; font-size:15px; font-weight:700; cursor:pointer; margin-bottom:14px; }
+.btn-cam.scanning { background:var(--accent); }
+.btn-cam:active { opacity:.85; }
 
-/* ── RESULT CARD ── */
-.scan-result-card { display: none; background: var(--surface); border: 2px solid var(--accent); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
-.scan-result-card.visible { display: block; }
-.scan-result-bc { text-align: center; margin-bottom: 14px; }
-.scan-result-bc svg { max-width: 100%; height: auto; display: block; margin: 0 auto; }
-.scan-result-fields { display: flex; flex-direction: column; gap: 10px; }
-.field-input { width: 100%; background: var(--bg); border: 2px solid var(--border); border-radius: 9px; padding: 13px 14px; font-family: 'DM Mono', monospace; font-size: 22px; font-weight: 500; color: var(--ink); outline: none; text-align: center; }
-.field-input:focus { border-color: var(--blue); }
-.field-input::placeholder { color: #ccc; font-size: 15px; font-weight: 400; }
-.field-input.note { font-size: 16px; text-align: left; }
-.scan-result-btns { display: flex; gap: 9px; margin-top: 12px; }
-.scan-result-btns .btn { margin: 0; flex: 1; padding: 14px; font-size: 15px; }
+.scan-result-card { display:none; background:var(--surface); border:2px solid var(--accent); border-radius:14px; padding:16px; margin-bottom:14px; }
+.scan-result-card.visible { display:block; }
+.scan-result-bc { text-align:center; margin-bottom:14px; }
+.scan-result-bc svg { max-width:100%; height:auto; display:block; margin:0 auto; }
+.scan-result-fields { display:flex; flex-direction:column; gap:10px; }
+.field-input { width:100%; background:var(--bg); border:2px solid var(--border); border-radius:9px; padding:13px 14px; font-family:'DM Mono',monospace; font-size:22px; font-weight:500; color:var(--ink); outline:none; text-align:center; }
+.field-input:focus { border-color:var(--blue); }
+.field-input::placeholder { color:#ccc; font-size:15px; font-weight:400; }
+.field-input.note { font-size:16px; text-align:left; }
+.scan-result-btns { display:flex; gap:9px; margin-top:12px; }
+.scan-result-btns .btn { margin:0; flex:1; padding:14px; font-size:15px; }
 
-/* ── MANUAL ── */
-.manual-row { display: flex; gap: 8px; margin-bottom: 16px; }
-.manual-in { flex: 1; background: var(--surface); border: 2px solid var(--border); border-radius: 9px; padding: 12px 14px; font-family: 'DM Mono', monospace; font-size: 15px; color: var(--ink); outline: none; }
-.manual-in:focus { border-color: var(--blue); }
-.manual-in::placeholder { color: #ccc; font-size: 13px; }
-.btn-add { background: var(--ink); color: #fff; border: none; border-radius: 9px; padding: 12px 16px; font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; }
-.btn-add:active { opacity: .8; }
+.manual-row { display:flex; gap:8px; margin-bottom:16px; }
+.manual-in { flex:1; background:var(--surface); border:2px solid var(--border); border-radius:9px; padding:12px 14px; font-family:'DM Mono',monospace; font-size:15px; color:var(--ink); outline:none; }
+.manual-in:focus { border-color:var(--blue); }
+.manual-in::placeholder { color:#ccc; font-size:13px; }
+.btn-add { background:var(--ink); color:#fff; border:none; border-radius:9px; padding:12px 16px; font-family:'Syne',sans-serif; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap; }
+.btn-add:active { opacity:.8; }
 
-/* ── ITEMS ── */
-.items-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-.items-lbl { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; }
-.count-pill { background: var(--accent); color: #fff; font-family: 'DM Mono', monospace; font-size: 11px; border-radius: 20px; padding: 2px 8px; }
-.empty { text-align: center; padding: 28px 16px; color: var(--muted); font-size: 14px; line-height: 1.5; }
-.item-card { background: var(--surface); border: 2px solid var(--border); border-radius: 11px; padding: 14px; margin-bottom: 10px; position: relative; }
-.item-bc-wrap { text-align: center; margin-bottom: 10px; }
-.item-bc-wrap svg { max-width: 100%; height: auto; display: block; margin: 0 auto; }
-.item-meta { display: flex; align-items: center; justify-content: space-between; }
-.item-kulor { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--blue); margin-top: 2px; }
-.item-qty-badge { background: var(--ink); color: #fff; font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500; padding: 4px 12px; border-radius: 20px; }
-.del-btn { position: absolute; top: 10px; right: 10px; background: none; border: none; color: #ccc; font-size: 18px; cursor: pointer; padding: 2px; line-height: 1; }
-.del-btn:active { color: var(--accent); }
+.items-hdr { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+.items-lbl { font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.07em; }
+.count-pill { background:var(--accent); color:#fff; font-family:'DM Mono',monospace; font-size:11px; border-radius:20px; padding:2px 8px; }
+.empty { text-align:center; padding:28px 16px; color:var(--muted); font-size:14px; line-height:1.5; }
+.item-card { background:var(--surface); border:2px solid var(--border); border-radius:11px; padding:14px; margin-bottom:10px; position:relative; }
+.item-bc-wrap { text-align:center; margin-bottom:10px; }
+.item-bc-wrap svg { max-width:100%; height:auto; display:block; margin:0 auto; }
+.item-meta { display:flex; align-items:center; justify-content:space-between; }
+.item-kulor { font-family:'DM Mono',monospace; font-size:12px; color:var(--blue); margin-top:2px; }
+.item-qty-badge { background:var(--ink); color:#fff; font-family:'DM Mono',monospace; font-size:13px; font-weight:500; padding:4px 12px; border-radius:20px; }
+.del-btn { position:absolute; top:10px; right:10px; background:none; border:none; color:#ccc; font-size:18px; cursor:pointer; padding:2px; line-height:1; }
+.del-btn:active { color:var(--accent); }
 
-/* ── BOTTOM BAR ── */
-.bottom-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg); border-top: 1px solid var(--border); padding: 11px 18px 26px; display: flex; gap: 9px; }
-.bottom-bar .btn { margin: 0; }
+.bottom-bar { position:fixed; bottom:0; left:0; right:0; background:var(--bg); border-top:1px solid var(--border); padding:11px 18px 26px; display:flex; gap:9px; }
+.bottom-bar .btn { margin:0; }
 
-/* ── SUMMARY ── */
-.summary-box { background: var(--surface); border: 2px solid var(--border); border-radius: 11px; padding: 14px 16px; margin-bottom: 22px; }
-.sum-row { display: flex; justify-content: space-between; align-items: baseline; font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); margin-bottom: 5px; }
-.sum-row:last-child { margin-bottom: 0; }
-.sum-row strong { color: var(--ink); font-size: 14px; }
-textarea.field { width: 100%; min-height: 130px; background: var(--surface); border: 2px solid var(--border); border-radius: 10px; padding: 14px 16px; font-family: 'DM Sans', sans-serif; font-size: 15px; color: var(--ink); outline: none; resize: none; line-height: 1.5; }
-textarea.field:focus { border-color: var(--blue); }
-textarea.field::placeholder { color: #ccc; }
+.summary-box { background:var(--surface); border:2px solid var(--border); border-radius:11px; padding:14px 16px; margin-bottom:22px; }
+.sum-row { display:flex; justify-content:space-between; align-items:baseline; font-family:'DM Mono',monospace; font-size:12px; color:var(--muted); margin-bottom:5px; }
+.sum-row:last-child { margin-bottom:0; }
+.sum-row strong { color:var(--ink); font-size:14px; }
+textarea.field { width:100%; min-height:130px; background:var(--surface); border:2px solid var(--border); border-radius:10px; padding:14px 16px; font-family:'DM Sans',sans-serif; font-size:15px; color:var(--ink); outline:none; resize:none; line-height:1.5; }
+textarea.field:focus { border-color:var(--blue); }
+textarea.field::placeholder { color:#ccc; }
 
-/* ── CONFIRM ── */
-#s-confirm { background: var(--green); color: #fff; align-items: center; justify-content: center; text-align: center; padding: 48px 28px; }
-.confirm-icon { font-size: 68px; margin-bottom: 20px; }
-.confirm-h { font-family: 'Syne', sans-serif; font-size: 30px; font-weight: 800; margin-bottom: 10px; }
-.confirm-p { font-size: 15px; opacity: .85; line-height: 1.5; margin-bottom: 6px; }
-.confirm-detail { font-family: 'DM Mono', monospace; font-size: 12px; opacity: .6; margin-bottom: 38px; }
+#s-confirm { background:var(--green); color:#fff; align-items:center; justify-content:center; text-align:center; padding:48px 28px; }
+.confirm-icon { font-size:68px; margin-bottom:20px; }
+.confirm-h { font-family:'Syne',sans-serif; font-size:30px; font-weight:800; margin-bottom:10px; }
+.confirm-p { font-size:15px; opacity:.85; line-height:1.5; margin-bottom:6px; }
+.confirm-detail { font-family:'DM Mono',monospace; font-size:12px; opacity:.6; margin-bottom:38px; }
 
-/* ── BUTIKEN ── */
-#s-store { background: var(--bg); }
-.store-order { background: var(--surface); border: 2px solid var(--border); border-radius: 14px; margin-bottom: 16px; overflow: hidden; }
-.store-order-hdr { background: var(--ink); color: var(--bg); padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
-.store-order-hdr:active { opacity: .85; }
-.store-order-name { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 800; }
-.store-order-proj { font-family: 'DM Mono', monospace; font-size: 12px; color: #aaa; margin-top: 2px; }
-.store-order-time { font-family: 'DM Mono', monospace; font-size: 11px; color: #888; text-align: right; }
-.store-order-body { padding: 16px; display: none; }
-.store-order-body.open { display: block; }
-.store-item { padding: 14px 0; border-bottom: 1px solid var(--border); text-align: center; }
-.store-item:last-of-type { border-bottom: none; }
-.store-item svg { max-width: 100%; height: auto; display: block; margin: 0 auto 8px; }
-.store-item-meta { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
-.store-item-qty { background: var(--ink); color: #fff; font-family: 'DM Mono', monospace; font-size: 14px; font-weight: 500; padding: 4px 14px; border-radius: 20px; }
-.store-item-kulor { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--blue); background: #eef3fa; padding: 4px 12px; border-radius: 20px; }
-.store-msg { margin: 12px 0 0; background: #fff8f0; border-left: 3px solid var(--accent); padding: 10px 12px; border-radius: 0 8px 8px 0; font-size: 13px; line-height: 1.4; }
-.store-msg-lbl { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--accent); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 3px; }
-.store-delete-btn { width: 100%; background: none; border: 2px solid #e88; border-radius: 10px; padding: 13px; margin-top: 14px; font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: #c44; cursor: pointer; }
-.store-delete-btn:active { background: #fff0f0; }
-.store-empty { text-align: center; padding: 60px 20px; color: var(--muted); }
-.store-empty .icon { font-size: 48px; margin-bottom: 12px; }
-.store-empty p { font-size: 15px; }
-.new-dot { display: inline-block; width: 9px; height: 9px; background: var(--accent); border-radius: 50%; margin-right: 7px; vertical-align: middle; }
-.loading { text-align: center; padding: 40px; color: var(--muted); font-family: 'DM Mono', monospace; font-size: 13px; }
+#s-store { background:var(--bg); }
+.store-order { background:var(--surface); border:2px solid var(--border); border-radius:14px; margin-bottom:16px; overflow:hidden; }
+.store-order-hdr { background:var(--ink); color:var(--bg); padding:14px 16px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; }
+.store-order-hdr:active { opacity:.85; }
+.store-order-name { font-family:'Syne',sans-serif; font-size:16px; font-weight:800; }
+.store-order-proj { font-family:'DM Mono',monospace; font-size:12px; color:#aaa; margin-top:2px; }
+.store-order-time { font-family:'DM Mono',monospace; font-size:11px; color:#888; text-align:right; }
+.store-order-body { padding:16px; display:none; }
+.store-order-body.open { display:block; }
+.store-item { padding:14px 0; border-bottom:1px solid var(--border); text-align:center; }
+.store-item:last-of-type { border-bottom:none; }
+.store-item svg { max-width:100%; height:auto; display:block; margin:0 auto 8px; }
+.store-item-meta { display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap; }
+.store-item-qty { background:var(--ink); color:#fff; font-family:'DM Mono',monospace; font-size:14px; font-weight:500; padding:4px 14px; border-radius:20px; }
+.store-item-kulor { font-family:'DM Mono',monospace; font-size:13px; color:var(--blue); background:#eef3fa; padding:4px 12px; border-radius:20px; }
+.store-msg { margin:12px 0 0; background:#fff8f0; border-left:3px solid var(--accent); padding:10px 12px; border-radius:0 8px 8px 0; font-size:13px; line-height:1.4; }
+.store-msg-lbl { font-family:'DM Mono',monospace; font-size:10px; color:var(--accent); text-transform:uppercase; letter-spacing:.07em; margin-bottom:3px; }
+.store-delete-btn { width:100%; background:none; border:2px solid #e88; border-radius:10px; padding:13px; margin-top:14px; font-family:'Syne',sans-serif; font-size:15px; font-weight:700; color:#c44; cursor:pointer; }
+.store-delete-btn:active { background:#fff0f0; }
+.store-empty { text-align:center; padding:60px 20px; color:var(--muted); }
+.store-empty .icon { font-size:48px; margin-bottom:12px; }
+.store-empty p { font-size:15px; }
+.new-dot { display:inline-block; width:9px; height:9px; background:var(--accent); border-radius:50%; margin-right:7px; vertical-align:middle; }
+.loading { text-align:center; padding:40px; color:var(--muted); font-family:'DM Mono',monospace; font-size:13px; }
 
-/* ── TOAST ── */
-#toast { position: fixed; top: 66px; left: 50%; transform: translateX(-50%); background: var(--green); color: #fff; font-family: 'DM Mono', monospace; font-size: 13px; padding: 7px 18px; border-radius: 20px; z-index: 999; opacity: 0; transition: opacity .25s; pointer-events: none; white-space: nowrap; }
-#toast.show { opacity: 1; }
-#toast.error { background: var(--accent); }
+#toast { position:fixed; top:66px; left:50%; transform:translateX(-50%); background:var(--green); color:#fff; font-family:'DM Mono',monospace; font-size:13px; padding:7px 18px; border-radius:20px; z-index:999; opacity:0; transition:opacity .25s; pointer-events:none; white-space:nowrap; }
+#toast.show { opacity:1; }
+#toast.error { background:var(--accent); }
 </style>
 </head>
 <body>
 
-<!-- ── START ── -->
 <div class="screen active" id="s-start">
   <div class="start-top">
     <div class="start-brand">Keller &amp; Glenn Färgbutik</div>
@@ -201,34 +176,25 @@ textarea.field::placeholder { color: #ccc; }
   </div>
 </div>
 
-<!-- ── PROJECT ── -->
 <div class="screen" id="s-project">
   <div class="hdr">
-    <div>
-      <div class="hdr-title">Ny beställning</div>
-      <div class="hdr-sub" id="hdr-name"></div>
-    </div>
+    <div><div class="hdr-title">Ny beställning</div><div class="hdr-sub" id="hdr-name"></div></div>
   </div>
   <div class="content">
     <div class="step-tag">Steg 1 av 3</div>
     <div class="page-h">Vilket<br>projekt?</div>
     <label class="lbl">PROJEKTNUMMER</label>
     <div class="proj-wrap">
-      <span class="proj-prefix">20</span>
-      <input type="number" inputmode="numeric" id="proj-in" placeholder="XXX" oninput="checkProj()">
+      <input type="text" inputmode="numeric" id="proj-in" placeholder="20XXX" oninput="checkProj()">
     </div>
     <button class="btn btn-red" id="proj-btn" onclick="goScan()" disabled>Fortsätt →</button>
     <button class="btn btn-outline" onclick="go('s-start')">← Byt namn</button>
   </div>
 </div>
 
-<!-- ── SCAN ── -->
 <div class="screen" id="s-scan">
   <div class="hdr">
-    <div>
-      <div class="hdr-title">Skanna produkter</div>
-      <div class="hdr-sub" id="scan-sub"></div>
-    </div>
+    <div><div class="hdr-title">Skanna produkter</div><div class="hdr-sub" id="scan-sub"></div></div>
   </div>
   <div class="content" style="padding-bottom:90px;">
     <div class="step-tag">Steg 2 av 3</div>
@@ -261,9 +227,7 @@ textarea.field::placeholder { color: #ccc; }
       <div class="items-lbl">Produkter</div>
       <div class="count-pill" id="item-count">0</div>
     </div>
-    <div id="items-list">
-      <div class="empty">Inga produkter ännu.<br>Skanna eller skriv in en streckkod.</div>
-    </div>
+    <div id="items-list"><div class="empty">Inga produkter ännu.</div></div>
   </div>
   <div class="bottom-bar">
     <button class="btn btn-outline" style="flex:1;" onclick="goBack()">← Tillbaka</button>
@@ -271,13 +235,9 @@ textarea.field::placeholder { color: #ccc; }
   </div>
 </div>
 
-<!-- ── MESSAGE ── -->
 <div class="screen" id="s-msg">
   <div class="hdr">
-    <div>
-      <div class="hdr-title">Meddelande</div>
-      <div class="hdr-sub" id="msg-sub"></div>
-    </div>
+    <div><div class="hdr-title">Meddelande</div><div class="hdr-sub" id="msg-sub"></div></div>
   </div>
   <div class="content">
     <div class="step-tag">Steg 3 av 3</div>
@@ -290,7 +250,6 @@ textarea.field::placeholder { color: #ccc; }
   </div>
 </div>
 
-<!-- ── CONFIRM ── -->
 <div class="screen" id="s-confirm">
   <div class="confirm-icon">✅</div>
   <div class="confirm-h">Skickat!</div>
@@ -299,25 +258,24 @@ textarea.field::placeholder { color: #ccc; }
   <button class="btn" style="background:#fff;color:var(--green);max-width:280px;margin-top:8px;" onclick="reset()">Ny beställning</button>
 </div>
 
-<!-- ── BUTIKEN ── -->
 <div class="screen" id="s-store">
   <div class="hdr">
-    <div>
-      <div class="hdr-title">Butiken</div>
-      <div class="hdr-sub">Läs av med scannern — radera när klar</div>
-    </div>
+    <div><div class="hdr-title">Butiken</div><div class="hdr-sub">Läs av med scannern — radera när klar</div></div>
     <button class="hdr-back" onclick="go('s-start')">✕</button>
   </div>
   <div class="content" id="store-content" style="padding-bottom:20px;">
-    <div class="loading">Hämtar beställningar…</div>
+    <div class="loading">Hämtar…</div>
   </div>
 </div>
 
 <div id="toast"></div>
 
-<script>
-// ── FIREBASE CONFIG ──────────────────────────
-var firebaseConfig = {
+<!-- Firebase via module script — most reliable method -->
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, updateDoc, query, orderBy, serverTimestamp, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const firebaseConfig = {
   apiKey: "AIzaSyBmMWfTtTFzj2-TG1M-zcyD3CNwxBZU54c",
   authDomain: "keller-glenn.firebaseapp.com",
   projectId: "keller-glenn",
@@ -325,82 +283,81 @@ var firebaseConfig = {
   messagingSenderId: "476962061001",
   appId: "1:476962061001:web:f1251f19b4990fe0226b18"
 };
-firebase.initializeApp(firebaseConfig);
-var db = firebase.firestore();
-var ordersRef = db.collection('orders');
 
-// ── STATE ────────────────────────────────────
-var state = { name: '', project: '', items: [] };
-var pendingCode = '';
-var scannerActive = false;
-var zxingReader = null;
-var lastCode = '', lastTime = 0;
-var toastTimer = null;
-var storeUnsubscribe = null;
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const ordersRef = collection(db, 'orders');
 
-// ── NAV ──────────────────────────────────────
-function go(id) {
-  document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
-  document.getElementById(id).classList.add('active');
-  window.scrollTo(0, 0);
-}
+// ── STATE ─────────────────────────────────────
+let state = { name: '', project: '', items: [] };
+let pendingCode = '';
+let scannerActive = false;
+let zxingReader = null;
+let lastCode = '', lastTime = 0;
+let toastTimer = null;
+let storeUnsubscribe = null;
 
-function showToast(msg, isError) {
-  var el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.remove('error');
-  if (isError) el.classList.add('error');
-  el.classList.add('show');
-  if (toastTimer) clearTimeout(toastTimer);
-  toastTimer = setTimeout(function() { el.classList.remove('show'); }, 2000);
-}
-
-// ── LIVE BADGE ON START ───────────────────────
-ordersRef.onSnapshot(function(snap) {
-  var count = snap.size;
-  var badge = document.getElementById('store-badge');
-  if (count > 0) {
-    badge.textContent = count;
+// ── LIVE BADGE ────────────────────────────────
+onSnapshot(query(ordersRef), (snap) => {
+  const badge = document.getElementById('store-badge');
+  if (snap.size > 0) {
+    badge.textContent = snap.size;
     badge.style.display = 'inline-block';
   } else {
     badge.style.display = 'none';
   }
 });
 
-// ── START ────────────────────────────────────
-function pickName(name) {
+// ── NAV ───────────────────────────────────────
+window.go = function(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+};
+
+function showToast(msg, isError) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.toggle('error', !!isError);
+  el.classList.add('show');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+// ── START ─────────────────────────────────────
+window.pickName = function(name) {
   state.name = name;
   document.getElementById('hdr-name').textContent = name;
   document.getElementById('proj-in').value = '';
   document.getElementById('proj-btn').disabled = true;
   go('s-project');
-}
+};
 
-// ── PROJECT ──────────────────────────────────
-function checkProj() {
-  var v = document.getElementById('proj-in').value.trim();
-  document.getElementById('proj-btn').disabled = (v.length === 0);
-}
+// ── PROJECT ───────────────────────────────────
+window.checkProj = function() {
+  const v = document.getElementById('proj-in').value.trim();
+  document.getElementById('proj-btn').disabled = v.length === 0;
+};
 
-function goScan() {
-  state.project = '20' + document.getElementById('proj-in').value.trim();
+window.goScan = function() {
+  state.project = document.getElementById('proj-in').value.trim();
   state.items = [];
   pendingCode = '';
   hideResultCard();
   document.getElementById('scan-sub').textContent = state.name + ' · ' + state.project;
   renderItems();
   go('s-scan');
-}
+};
 
-function goBack() {
+window.goBack = function() {
   if (scannerActive) stopScanner();
   go('s-project');
-}
+};
 
-// ── SCANNER ──────────────────────────────────
-function toggleScanner() {
+// ── SCANNER ───────────────────────────────────
+window.toggleScanner = function() {
   if (scannerActive) { stopScanner(); } else { startScanner(); }
-}
+};
 
 function startScanner() {
   scannerActive = true;
@@ -409,24 +366,24 @@ function startScanner() {
   document.getElementById('cam-btn').textContent = '⏹ Stoppa kamera';
   document.getElementById('cam-btn').classList.add('scanning');
   try {
-    var hints = new Map();
+    const hints = new Map();
     hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
       ZXing.BarcodeFormat.EAN_13, ZXing.BarcodeFormat.EAN_8,
       ZXing.BarcodeFormat.CODE_128, ZXing.BarcodeFormat.CODE_39,
-      ZXing.BarcodeFormat.UPC_A
+      ZXing.BarcodeFormat.UPC_A, ZXing.BarcodeFormat.UPC_E,
+      ZXing.BarcodeFormat.ITF, ZXing.BarcodeFormat.RSS_14
     ]);
     hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
-    zxingReader = new ZXing.BrowserMultiFormatReader(hints);
+    zxingReader = new ZXing.BrowserMultiFormatReader(hints, 300);
     zxingReader.decodeFromConstraints(
-      { video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } } },
+      { video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } } },
       document.getElementById('scanner-video'),
-      function(result, err) {
+      (result, err) => {
         if (result) {
-          var code = result.getText();
-          var now = Date.now();
+          const code = result.getText();
+          const now = Date.now();
           if (code === lastCode && (now - lastTime) < 3000) return;
-          lastCode = code;
-          lastTime = now;
+          lastCode = code; lastTime = now;
           if (navigator.vibrate) navigator.vibrate([80, 30, 80]);
           stopScanner();
           showResultCard(code);
@@ -448,16 +405,16 @@ function stopScanner() {
   try { if (zxingReader) zxingReader.reset(); } catch(e) {}
 }
 
-// ── RESULT CARD ──────────────────────────────
+// ── RESULT CARD ───────────────────────────────
 function showResultCard(code) {
   pendingCode = code;
-  var svgWrap = document.getElementById('result-bc-svg');
-  svgWrap.innerHTML = '<svg id="result-svg"></svg>';
+  const wrap = document.getElementById('result-bc-svg');
+  wrap.innerHTML = '<svg id="result-svg"></svg>';
   drawBarcode('result-svg', code);
   document.getElementById('result-qty').value = '';
   document.getElementById('result-note').value = '';
   document.getElementById('result-card').classList.add('visible');
-  setTimeout(function() { document.getElementById('result-qty').focus(); }, 100);
+  setTimeout(() => document.getElementById('result-qty').focus(), 100);
 }
 
 function hideResultCard() {
@@ -465,64 +422,52 @@ function hideResultCard() {
   pendingCode = '';
 }
 
-function confirmResult() {
+window.confirmResult = function() {
   if (!pendingCode) return;
-  var qty = parseInt(document.getElementById('result-qty').value) || 1;
-  var note = document.getElementById('result-note').value.trim();
-  state.items.push({ barcode: pendingCode, qty: qty, note: note });
+  const qty = parseInt(document.getElementById('result-qty').value) || 1;
+  const note = document.getElementById('result-note').value.trim();
+  state.items.push({ barcode: pendingCode, qty, note });
   renderItems();
   hideResultCard();
   showToast('✓ Tillagd');
-}
+};
 
-function discardResult() {
-  hideResultCard();
-}
+window.discardResult = function() { hideResultCard(); };
 
-// ── MANUAL ───────────────────────────────────
-function addManual() {
-  var inp = document.getElementById('manual-in');
-  var v = inp.value.trim();
+// ── MANUAL ────────────────────────────────────
+window.addManual = function() {
+  const inp = document.getElementById('manual-in');
+  const v = inp.value.trim();
   if (!v) return;
   showResultCard(v);
   inp.value = '';
-}
+};
 
-// ── ITEMS ────────────────────────────────────
+// ── ITEMS ─────────────────────────────────────
 function renderItems() {
-  var list = document.getElementById('items-list');
+  const list = document.getElementById('items-list');
   document.getElementById('item-count').textContent = state.items.length;
-  document.getElementById('scan-next').disabled = (state.items.length === 0);
+  document.getElementById('scan-next').disabled = state.items.length === 0;
   if (state.items.length === 0) {
     list.innerHTML = '<div class="empty">Inga produkter ännu.<br>Skanna eller skriv in en streckkod.</div>';
     return;
   }
-  var html = '';
-  for (var i = 0; i < state.items.length; i++) {
-    var item = state.items[i];
-    html += '<div class="item-card">' +
-      '<div class="item-bc-wrap"><svg id="bc' + i + '"></svg></div>' +
-      '<div class="item-meta">' +
-        '<div>' +
-          (item.note ? '<div class="item-kulor">📝 ' + item.note + '</div>' : '') +
-        '</div>' +
-        '<div class="item-qty-badge">×' + item.qty + '</div>' +
-      '</div>' +
-      '<button class="del-btn" onclick="delItem(' + i + ')">✕</button>' +
-    '</div>';
-  }
-  list.innerHTML = html;
-  for (var j = 0; j < state.items.length; j++) {
-    drawBarcode('bc' + j, state.items[j].barcode);
-  }
+  list.innerHTML = state.items.map((item, i) =>
+    `<div class="item-card">
+      <div class="item-bc-wrap"><svg id="bc${i}"></svg></div>
+      <div class="item-meta">
+        <div>${item.note ? `<div class="item-kulor">📝 ${item.note}</div>` : ''}</div>
+        <div class="item-qty-badge">×${item.qty}</div>
+      </div>
+      <button class="del-btn" onclick="delItem(${i})">✕</button>
+    </div>`
+  ).join('');
+  state.items.forEach((item, i) => drawBarcode('bc' + i, item.barcode));
 }
 
-function delItem(i) {
-  state.items.splice(i, 1);
-  renderItems();
-}
+window.delItem = function(i) { state.items.splice(i, 1); renderItems(); };
 
-// ── BARCODE ──────────────────────────────────
+// ── BARCODE ───────────────────────────────────
 function drawBarcode(svgId, code) {
   try {
     JsBarcode('#' + svgId, code, {
@@ -531,8 +476,8 @@ function drawBarcode(svgId, code) {
       background: '#ffffff', lineColor: '#000000'
     });
   } catch(e) {
-    var el = document.getElementById(svgId);
-    if (el) el.outerHTML = '<div style="font-family:monospace;font-size:13px;text-align:center;padding:6px;color:#555;">' + code + '</div>';
+    const el = document.getElementById(svgId);
+    if (el) el.outerHTML = `<div style="font-family:monospace;font-size:13px;text-align:center;padding:6px;">${code}</div>`;
   }
 }
 
@@ -543,159 +488,128 @@ function guessFormat(code) {
   return 'CODE128';
 }
 
-// ── MESSAGE ──────────────────────────────────
-function goMsg() {
+// ── MESSAGE ───────────────────────────────────
+window.goMsg = function() {
   if (scannerActive) stopScanner();
   document.getElementById('msg-sub').textContent = state.name + ' · ' + state.project;
-  var tot = 0;
-  for (var i = 0; i < state.items.length; i++) { tot += state.items[i].qty; }
+  const tot = state.items.reduce((s, x) => s + x.qty, 0);
   document.getElementById('summary-box').innerHTML =
-    '<div class="sum-row"><span>Namn</span><strong>' + state.name + '</strong></div>' +
-    '<div class="sum-row"><span>Projekt</span><strong>' + state.project + '</strong></div>' +
-    '<div class="sum-row"><span>Produkter</span><strong>' + state.items.length + ' art. (' + tot + ' st)</strong></div>';
+    `<div class="sum-row"><span>Namn</span><strong>${state.name}</strong></div>
+     <div class="sum-row"><span>Projekt</span><strong>${state.project}</strong></div>
+     <div class="sum-row"><span>Produkter</span><strong>${state.items.length} art. (${tot} st)</strong></div>`;
   document.getElementById('msg-in').value = '';
   go('s-msg');
-}
+};
 
-// ── SEND (Firebase) ───────────────────────────
-function sendOrder() {
-  var btn = document.getElementById('send-btn');
+// ── SEND ──────────────────────────────────────
+window.sendOrder = async function() {
+  const btn = document.getElementById('send-btn');
   btn.disabled = true;
   btn.textContent = 'Skickar…';
-
-  var msg = document.getElementById('msg-in').value.trim();
-  var order = {
-    name: state.name,
-    project: state.project,
-    items: JSON.parse(JSON.stringify(state.items)),
-    message: msg,
-    time: firebase.firestore.FieldValue.serverTimestamp(),
-    read: false
-  };
-
-  ordersRef.add(order).then(function() {
-    // Also send WhatsApp
-    var now = new Date();
-    var lines = ['🔵 Ny beställning — Keller & Glenn', '👷 ' + order.name, '📋 Projekt: ' + order.project, ''];
-    for (var i = 0; i < order.items.length; i++) {
-      var item = order.items[i];
-      var row = '• ' + item.barcode + '  ×' + item.qty;
-      if (item.note) row += '  (' + item.note + ')';
-      lines.push(row);
-    }
-    if (msg) { lines.push(''); lines.push('💬 ' + msg); }
-    var waUrl = 'https://wa.me/?text=' + encodeURIComponent(lines.join('\n'));
-
-    document.getElementById('confirm-p').textContent = 'Beställning från ' + order.name + ' är skickad.';
-    document.getElementById('confirm-d').textContent = order.project + ' · ' + order.items.length + ' artiklar';
+  const msg = document.getElementById('msg-in').value.trim();
+  try {
+    await addDoc(ordersRef, {
+      name: state.name,
+      project: state.project,
+      items: JSON.parse(JSON.stringify(state.items)),
+      message: msg,
+      time: serverTimestamp(),
+      read: false
+    });
+    document.getElementById('confirm-p').textContent = 'Beställning från ' + state.name + ' är skickad.';
+    document.getElementById('confirm-d').textContent = state.project + ' · ' + state.items.length + ' artiklar';
     go('s-confirm');
-    setTimeout(function() { window.open(waUrl, '_blank'); }, 400);
-  }).catch(function(err) {
+  } catch(err) {
     showToast('Fel: ' + err.message, true);
     btn.disabled = false;
     btn.textContent = '📤 Skicka beställning';
-  });
-}
+  }
+};
 
-function reset() {
+window.reset = function() {
   state = { name: '', project: '', items: [] };
   go('s-start');
-}
+};
 
-// ── BUTIKEN (live) ────────────────────────────
-function openStore() {
+// ── BUTIKEN ───────────────────────────────────
+window.openStore = function() {
   go('s-store');
   document.getElementById('store-content').innerHTML = '<div class="loading">Hämtar beställningar…</div>';
-
   if (storeUnsubscribe) storeUnsubscribe();
-  storeUnsubscribe = ordersRef.orderBy('time', 'desc').onSnapshot(function(snap) {
-    var orders = [];
-    snap.forEach(function(doc) {
-      var d = doc.data();
-      d.id = doc.id;
-      orders.push(d);
-    });
-    renderStore(orders);
-  }, function(err) {
-    document.getElementById('store-content').innerHTML = '<div class="empty">Kunde inte hämta beställningar.<br>' + err.message + '</div>';
-  });
-}
+  storeUnsubscribe = onSnapshot(
+    query(ordersRef, orderBy('time', 'desc')),
+    (snap) => {
+      const orders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderStore(orders);
+    },
+    (err) => {
+      document.getElementById('store-content').innerHTML = '<div class="empty">Fel: ' + err.message + '</div>';
+    }
+  );
+};
 
 function renderStore(orders) {
-  var el = document.getElementById('store-content');
+  const el = document.getElementById('store-content');
   if (orders.length === 0) {
     el.innerHTML = '<div class="store-empty"><div class="icon">✅</div><p>Inga beställningar att hantera</p></div>';
     return;
   }
-  var html = '';
-  for (var i = 0; i < orders.length; i++) {
-    var order = orders[i];
-    var t = order.time ? order.time.toDate() : new Date();
-    var ts = t.toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'short' }) + ' ' +
-             t.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
-    var tot = 0;
-    for (var j = 0; j < order.items.length; j++) { tot += order.items[j].qty; }
-
-    var itemsHtml = '';
-    for (var k = 0; k < order.items.length; k++) {
-      var item = order.items[k];
-      itemsHtml += '<div class="store-item">' +
-        '<svg id="sbc' + i + '_' + k + '"></svg>' +
-        '<div class="store-item-meta">' +
-          '<div class="store-item-qty">×' + item.qty + '</div>' +
-          (item.note ? '<div class="store-item-kulor">📝 ' + item.note + '</div>' : '') +
-        '</div>' +
-      '</div>';
-    }
-
-    html += '<div class="store-order">' +
-      '<div class="store-order-hdr" onclick="toggleStoreOrder(' + i + ',\'' + order.id + '\')">' +
-        '<div>' +
-          '<div class="store-order-name">' +
-            (!order.read ? '<span class="new-dot"></span>' : '') + order.name +
-          '</div>' +
-          '<div class="store-order-proj">Projekt ' + order.project + ' · ' + order.items.length + ' art. · ' + tot + ' st</div>' +
-        '</div>' +
-        '<div class="store-order-time">' + ts + '</div>' +
-      '</div>' +
-      '<div class="store-order-body" id="sb' + i + '" data-orderid="' + order.id + '">' +
-        itemsHtml +
-        (order.message ? '<div class="store-msg"><div class="store-msg-lbl">Meddelande</div>' + order.message + '</div>' : '') +
-        '<button class="store-delete-btn" onclick="deleteOrder(\'' + order.id + '\',event)">🗑 Radera beställning</button>' +
-      '</div>' +
-    '</div>';
-  }
-  el.innerHTML = html;
+  el.innerHTML = orders.map((order, i) => {
+    const t = order.time ? order.time.toDate() : new Date();
+    const ts = t.toLocaleDateString('sv-SE', { weekday:'short', day:'numeric', month:'short' }) + ' ' +
+               t.toLocaleTimeString('sv-SE', { hour:'2-digit', minute:'2-digit' });
+    const tot = order.items.reduce((s, x) => s + x.qty, 0);
+    const itemsHtml = order.items.map((item, k) =>
+      `<div class="store-item">
+        <svg id="sbc${i}_${k}"></svg>
+        <div class="store-item-meta">
+          <div class="store-item-qty">×${item.qty}</div>
+          ${item.note ? `<div class="store-item-kulor">📝 ${item.note}</div>` : ''}
+        </div>
+      </div>`
+    ).join('');
+    return `<div class="store-order">
+      <div class="store-order-hdr" onclick="toggleStoreOrder(${i},'${order.id}')">
+        <div>
+          <div class="store-order-name">${!order.read ? '<span class="new-dot"></span>' : ''}${order.name}</div>
+          <div class="store-order-proj">Projekt ${order.project} · ${order.items.length} art. · ${tot} st</div>
+        </div>
+        <div class="store-order-time">${ts}</div>
+      </div>
+      <div class="store-order-body" id="sb${i}" data-items='${JSON.stringify(order.items)}'>
+        ${itemsHtml}
+        ${order.message ? `<div class="store-msg"><div class="store-msg-lbl">Meddelande</div>${order.message}</div>` : ''}
+        <button class="store-delete-btn" onclick="deleteOrder('${order.id}',event)">🗑 Radera beställning</button>
+      </div>
+    </div>`;
+  }).join('');
 }
 
-function toggleStoreOrder(i, orderId) {
-  var el = document.getElementById('sb' + i);
-  var wasOpen = el.classList.contains('open');
+window.toggleStoreOrder = async function(i, orderId) {
+  const el = document.getElementById('sb' + i);
+  const wasOpen = el.classList.contains('open');
   el.classList.toggle('open');
   if (!wasOpen) {
-    // Render barcodes
-    ordersRef.doc(orderId).get().then(function(doc) {
-      if (doc.exists) {
-        var order = doc.data();
-        for (var k = 0; k < order.items.length; k++) {
-          drawBarcode('sbc' + i + '_' + k, order.items[k].barcode);
-        }
-        // Mark as read
-        if (!order.read) {
-          ordersRef.doc(orderId).update({ read: true });
-        }
+    const items = JSON.parse(el.dataset.items || '[]');
+    items.forEach((item, k) => drawBarcode('sbc' + i + '_' + k, item.barcode));
+    try {
+      const snap = await getDoc(doc(db, 'orders', orderId));
+      if (snap.exists() && !snap.data().read) {
+        await updateDoc(doc(db, 'orders', orderId), { read: true });
       }
-    });
+    } catch(e) {}
   }
-}
+};
 
-function deleteOrder(orderId, e) {
+window.deleteOrder = async function(orderId, e) {
   e.stopPropagation();
-  if (!confirm('Radera beställningen? Den försvinner permanent.')) return;
-  ordersRef.doc(orderId).delete().catch(function(err) {
-    showToast('Kunde inte radera: ' + err.message, true);
-  });
-}
+  if (!confirm('Radera beställningen?')) return;
+  try {
+    await deleteDoc(doc(db, 'orders', orderId));
+  } catch(err) {
+    showToast('Fel: ' + err.message, true);
+  }
+};
 </script>
 </body>
 </html>
