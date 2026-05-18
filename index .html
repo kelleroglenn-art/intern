@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Keller och Glenn</title>
+<script src="https://unpkg.com/@zxing/library@0.19.1/umd/index.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F5F0E8; --surface: #fff; --ink: #1A1410; --muted: #8A8070;
+  --accent: #C8430A; --blue: #2B5EA7; --border: #DDD8CC; --green: #2D7A4F;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; }
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--ink); overflow-x: hidden; }
+.screen { display: none; min-height: 100dvh; flex-direction: column; }
+.screen.active { display: flex; }
+
+#s-start { background: var(--ink); color: var(--bg); }
+.start-top { padding: 44px 28px 24px; }
+.start-brand { font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; color: var(--accent); margin-bottom: 16px; }
+.start-h { font-family: 'Syne', sans-serif; font-size: 36px; font-weight: 800; line-height: 1.05; margin-bottom: 6px; }
+.start-sub { font-family: 'DM Mono', monospace; font-size: 12px; color: #777; }
+.name-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: #2a2520; border-top: 1px solid #2a2520; flex: 1; }
+.name-btn { background: #1c1814; border: none; color: var(--bg); font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; padding: 28px 18px; cursor: pointer; text-align: left; }
+.name-btn:active { background: #2a2520; }
+.name-btn.store { background: #1a2a1a; color: #7aba7a; font-size: 16px; display: flex; align-items: center; gap: 10px; position: relative; }
+.name-btn.store:active { background: #223322; }
+.store-badge { position: absolute; top: 12px; right: 12px; background: var(--accent); color: #fff; font-family: 'DM Mono', monospace; font-size: 11px; border-radius: 20px; padding: 2px 8px; display: none; }
+
+.hdr { background: var(--ink); color: var(--bg); padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+.hdr-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 800; }
+.hdr-sub { font-family: 'DM Mono', monospace; font-size: 11px; color: #888; margin-top: 2px; }
+.hdr-back { background: none; border: none; color: #888; font-size: 20px; cursor: pointer; padding: 4px; line-height: 1; }
+
+.content { padding: 24px 20px; flex: 1; }
+.step-tag { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: .12em; text-transform: uppercase; margin-bottom: 6px; }
+.page-h { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; line-height: 1.1; margin-bottom: 24px; }
+.lbl { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: .07em; margin-bottom: 7px; display: block; }
+
+.proj-wrap { display: flex; align-items: center; background: var(--surface); border: 2px solid var(--border); border-radius: 10px; padding: 13px 16px; margin-bottom: 24px; }
+.proj-wrap:focus-within { border-color: var(--blue); }
+.proj-wrap input { border: none; outline: none; font-family: 'DM Mono', monospace; font-size: 22px; font-weight: 500; color: var(--ink); background: transparent; width: 100%; }
+.proj-wrap input::placeholder { color: #ccc; font-weight: 400; font-size: 17px; }
+
+.btn { width: 100%; border: none; border-radius: 11px; padding: 17px; font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; cursor: pointer; transition: opacity .15s, transform .1s; }
+.btn:active { opacity: .82; transform: scale(.98); }
+.btn:disabled { opacity: .3; }
+.btn-red { background: var(--accent); color: #fff; }
+.btn-green { background: var(--green); color: #fff; }
+.btn-outline { background: var(--surface); color: var(--ink); border: 2px solid var(--border); margin-top: 11px; }
+
+.scanner-box { position: relative; background: #000; border-radius: 14px; overflow: hidden; margin-bottom: 14px; min-height: 200px; display: flex; align-items: center; justify-content: center; }
+.scanner-box video { width: 100%; display: block; border-radius: 14px; }
+.scanner-box canvas { display: none; }
+.scan-placeholder { text-align: center; padding: 40px 20px; color: #555; }
+.scan-placeholder .icon { font-size: 40px; margin-bottom: 8px; }
+.scan-placeholder p { font-size: 13px; }
+.scan-corners { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 220px; height: 80px; pointer-events: none; display: none; }
+.scanner-box.scanner-active .scan-corners { display: block; }
+.scan-corners::before,.scan-corners::after,.scan-ci::before,.scan-ci::after { content:''; position:absolute; width:20px; height:20px; border-color:var(--accent); border-style:solid; }
+.scan-corners::before{top:0;left:0;border-width:2px 0 0 2px}
+.scan-corners::after{top:0;right:0;border-width:2px 2px 0 0}
+.scan-ci::before{bottom:0;left:0;border-width:0 0 2px 2px}
+.scan-ci::after{bottom:0;right:0;border-width:0 2px 2px 0}
+.scan-line { position:absolute; left:4px; right:4px; height:2px; background:var(--accent); box-shadow:0 0 8px var(--accent); animation:scanAnim 1.5s ease-in-out infinite; display:none; }
+.scanner-box.scanner-active .scan-line { display:block; }
+@keyframes scanAnim{0%,100%{top:10%}50%{top:85%}}
+.btn-cam { width:100%; background:var(--blue); color:#fff; border:none; border-radius:10px; padding:15px; font-family:'Syne',sans-serif; font-size:15px; font-weight:700; cursor:pointer; margin-bottom:14px; }
+.btn-cam.scanning { background:var(--accent); }
+.btn-cam:active { opacity:.85; }
+
+.scan-result-card { display:none; background:var(--surface); border:2px solid var(--accent); border-radius:14px; padding:16px; margin-bottom:14px; }
+.scan-result-card.visible { display:block; }
+.scan-result-bc { text-align:center; margin-bottom:14px; }
+.scan-result-bc svg { max-width:100%; height:auto; display:block; margin:0 auto; }
+.scan-result-fields { display:flex; flex-direction:column; gap:10px; }
+.field-input { width:100%; background:var(--bg); border:2px solid var(--border); border-radius:9px; padding:13px 14px; font-family:'DM Mono',monospace; font-size:22px; font-weight:500; color:var(--ink); outline:none; text-align:center; }
+.field-input:focus { border-color:var(--blue); }
+.field-input::placeholder { color:#ccc; font-size:15px; font-weight:400; }
+.field-input.note { font-size:16px; text-align:left; }
+.scan-result-btns { display:flex; gap:9px; margin-top:12px; }
+.scan-result-btns .btn { margin:0; flex:1; padding:14px; font-size:15px; }
+
+.manual-row { display:flex; gap:8px; margin-bottom:16px; }
+.manual-in { flex:1; background:var(--surface); border:2px solid var(--border); border-radius:9px; padding:12px 14px; font-family:'DM Mono',monospace; font-size:15px; color:var(--ink); outline:none; }
+.manual-in:focus { border-color:var(--blue); }
+.manual-in::placeholder { color:#ccc; font-size:13px; }
+.btn-add { background:var(--ink); color:#fff; border:none; border-radius:9px; padding:12px 16px; font-family:'Syne',sans-serif; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap; }
+.btn-add:active { opacity:.8; }
+
+.items-hdr { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+.items-lbl { font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.07em; }
+.count-pill { background:var(--accent); color:#fff; font-family:'DM Mono',monospace; font-size:11px; border-radius:20px; padding:2px 8px; }
+.empty { text-align:center; padding:28px 16px; color:var(--muted); font-size:14px; line-height:1.5; }
+.item-card { background:var(--surface); border:2px solid var(--border); border-radius:11px; padding:14px; margin-bottom:10px; position:relative; }
+.item-bc-wrap { text-align:center; margin-bottom:10px; }
+.item-bc-wrap svg { max-width:100%; height:auto; display:block; margin:0 auto; }
+.item-meta { display:flex; align-items:center; justify-content:space-between; }
+.item-kulor { font-family:'DM Mono',monospace; font-size:12px; color:var(--blue); margin-top:2px; }
+.item-qty-badge { background:var(--ink); color:#fff; font-family:'DM Mono',monospace; font-size:13px; font-weight:500; padding:4px 12px; border-radius:20px; }
+.del-btn { position:absolute; top:10px; right:10px; background:none; border:none; color:#ccc; font-size:18px; cursor:pointer; padding:2px; line-height:1; }
+.del-btn:active { color:var(--accent); }
+
+.bottom-bar { position:fixed; bottom:0; left:0; right:0; background:var(--bg); border-top:1px solid var(--border); padding:11px 18px 26px; display:flex; gap:9px; }
+.bottom-bar .btn { margin:0; }
+
+.summary-box { background:var(--surface); border:2px solid var(--border); border-radius:11px; padding:14px 16px; margin-bottom:22px; }
+.sum-row { display:flex; justify-content:space-between; align-items:baseline; font-family:'DM Mono',monospace; font-size:12px; color:var(--muted); margin-bottom:5px; }
+.sum-row:last-child { margin-bottom:0; }
+.sum-row strong { color:var(--ink); font-size:14px; }
+textarea.field { width:100%; min-height:130px; background:var(--surface); border:2px solid var(--border); border-radius:10px; padding:14px 16px; font-family:'DM Sans',sans-serif; font-size:15px; color:var(--ink); outline:none; resize:none; line-height:1.5; }
+textarea.field:focus { border-color:var(--blue); }
+textarea.field::placeholder { color:#ccc; }
+
+#s-confirm { background:var(--green); color:#fff; align-items:center; justify-content:center; text-align:center; padding:48px 28px; }
+.confirm-icon { font-size:68px; margin-bottom:20px; }
+.confirm-h { font-family:'Syne',sans-serif; font-size:30px; font-weight:800; margin-bottom:10px; }
+.confirm-p { font-size:15px; opacity:.85; line-height:1.5; margin-bottom:6px; }
+.confirm-detail { font-family:'DM Mono',monospace; font-size:12px; opacity:.6; margin-bottom:38px; }
+
+#s-store { background:var(--bg); }
+.store-order { background:var(--surface); border:2px solid var(--border); border-radius:14px; margin-bottom:16px; overflow:hidden; }
+.store-order-hdr { background:var(--ink); color:var(--bg); padding:14px 16px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; }
+.store-order-hdr:active { opacity:.85; }
+.store-order-name { font-family:'Syne',sans-serif; font-size:16px; font-weight:800; }
+.store-order-proj { font-family:'DM Mono',monospace; font-size:12px; color:#aaa; margin-top:2px; }
+.store-order-time { font-family:'DM Mono',monospace; font-size:11px; color:#888; text-align:right; }
+.store-order-body { padding:16px; display:none; }
+.store-order-body.open { display:block; }
+.store-item { padding:14px 0; border-bottom:1px solid var(--border); text-align:center; }
+.store-item:last-of-type { border-bottom:none; }
+.store-item svg { max-width:100%; height:auto; display:block; margin:0 auto 8px; }
+.store-item-meta { display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap; }
+.store-item-qty { background:var(--ink); color:#fff; font-family:'DM Mono',monospace; font-size:14px; font-weight:500; padding:4px 14px; border-radius:20px; }
+.store-item-kulor { font-family:'DM Mono',monospace; font-size:13px; color:var(--blue); background:#eef3fa; padding:4px 12px; border-radius:20px; }
+.store-msg { margin:12px 0 0; background:#fff8f0; border-left:3px solid var(--accent); padding:10px 12px; border-radius:0 8px 8px 0; font-size:13px; line-height:1.4; }
+.store-msg-lbl { font-family:'DM Mono',monospace; font-size:10px; color:var(--accent); text-transform:uppercase; letter-spacing:.07em; margin-bottom:3px; }
+.store-delete-btn { width:100%; background:none; border:2px solid #e88; border-radius:10px; padding:13px; margin-top:14px; font-family:'Syne',sans-serif; font-size:15px; font-weight:700; color:#c44; cursor:pointer; }
+.store-delete-btn:active { background:#fff0f0; }
+.store-empty { text-align:center; padding:60px 20px; color:var(--muted); }
+.store-empty .icon { font-size:48px; margin-bottom:12px; }
+.store-empty p { font-size:15px; }
+.new-dot { display:inline-block; width:9px; height:9px; background:var(--accent); border-radius:50%; margin-right:7px; vertical-align:middle; }
+.loading { text-align:center; padding:40px; color:var(--muted); font-family:'DM Mono',monospace; font-size:13px; }
+
+#toast { position:fixed; top:66px; left:50%; transform:translateX(-50%); background:var(--green); color:#fff; font-family:'DM Mono',monospace; font-size:13px; padding:7px 18px; border-radius:20px; z-index:999; opacity:0; transition:opacity .25s; pointer-events:none; white-space:nowrap; }
+#toast.show { opacity:1; }
+#toast.error { background:var(--accent); }
+</style>
+</head>
+<body>
+
+<div class="screen active" id="s-start">
+  <div class="start-top">
+    <div class="start-brand">Keller &amp; Glenn Färgbutik</div>
+    <div class="start-h">Vem<br>hämtar?</div>
+    <div class="start-sub">Tryck på ditt namn</div>
+  </div>
+  <div class="name-grid">
+    <button class="name-btn" onclick="pickName('Glenn')">Glenn</button>
+    <button class="name-btn" onclick="pickName('Daniel')">Daniel</button>
+    <button class="name-btn" onclick="pickName('Birger')">Birger</button>
+    <button class="name-btn" onclick="pickName('Henrik')">Henrik</button>
+    <button class="name-btn" onclick="pickName('Ester')">Ester</button>
+    <button class="name-btn" onclick="pickName('Wille')">Wille</button>
+    <button class="name-btn" onclick="pickName('Johannes')">Johannes</button>
+    <button class="name-btn store" id="store-btn" onclick="openStore()">
+      🏪 Butiken
+      <span class="store-badge" id="store-badge"></span>
+    </button>
+  </div>
+</div>
+
+<div class="screen" id="s-project">
+  <div class="hdr">
+    <div><div class="hdr-title">Ny beställning</div><div class="hdr-sub" id="hdr-name"></div></div>
+  </div>
+  <div class="content">
+    <div class="step-tag">Steg 1 av 3</div>
+    <div class="page-h">Vilket<br>projekt?</div>
+    <label class="lbl">PROJEKTNUMMER</label>
+    <div class="proj-wrap">
+      <input type="text" inputmode="numeric" id="proj-in" placeholder="20XXX" oninput="checkProj()">
+    </div>
+    <button class="btn btn-red" id="proj-btn" onclick="goScan()" disabled>Fortsätt →</button>
+    <button class="btn btn-outline" onclick="go('s-start')">← Byt namn</button>
+  </div>
+</div>
+
+<div class="screen" id="s-scan">
+  <div class="hdr">
+    <div><div class="hdr-title">Skanna produkter</div><div class="hdr-sub" id="scan-sub"></div></div>
+  </div>
+  <div class="content" style="padding-bottom:90px;">
+    <div class="step-tag">Steg 2 av 3</div>
+    <div class="scanner-box" id="scanner-box">
+      <div class="scan-placeholder" id="scan-ph">
+        <div class="icon">📷</div>
+        <p>Tryck "Starta kamera" nedan</p>
+      </div>
+      <video id="scanner-video" autoplay playsinline muted></video>
+      <div class="scan-corners"><div class="scan-ci"></div></div>
+      <div class="scan-line"></div>
+    </div>
+    <button class="btn-cam" id="cam-btn" onclick="toggleScanner()">📷 Starta kamera</button>
+    <div class="scan-result-card" id="result-card">
+      <div class="scan-result-bc" id="result-bc-svg"></div>
+      <div class="scan-result-fields">
+        <input class="field-input" type="number" inputmode="numeric" id="result-qty" placeholder="Antal" min="1">
+        <input class="field-input note" type="text" id="result-note" placeholder="Kulör / notering (valfritt)">
+      </div>
+      <div class="scan-result-btns">
+        <button class="btn btn-outline" onclick="discardResult()">✕ Kassera</button>
+        <button class="btn btn-green" onclick="confirmResult()">✓ Lägg till</button>
+      </div>
+    </div>
+    <div class="manual-row">
+      <input class="manual-in" id="manual-in" type="text" inputmode="numeric" placeholder="Eller ange streckkod manuellt…">
+      <button class="btn-add" onclick="addManual()">+ Lägg till</button>
+    </div>
+    <div class="items-hdr">
+      <div class="items-lbl">Produkter</div>
+      <div class="count-pill" id="item-count">0</div>
+    </div>
+    <div id="items-list"><div class="empty">Inga produkter ännu.</div></div>
+  </div>
+  <div class="bottom-bar">
+    <button class="btn btn-outline" style="flex:1;" onclick="goBack()">← Tillbaka</button>
+    <button class="btn btn-red" style="flex:2;" id="scan-next" onclick="goMsg()" disabled>Nästa →</button>
+  </div>
+</div>
+
+<div class="screen" id="s-msg">
+  <div class="hdr">
+    <div><div class="hdr-title">Meddelande</div><div class="hdr-sub" id="msg-sub"></div></div>
+  </div>
+  <div class="content">
+    <div class="step-tag">Steg 3 av 3</div>
+    <div class="page-h">Något<br>att tillägga?</div>
+    <div class="summary-box" id="summary-box"></div>
+    <label class="lbl">MEDDELANDE TILL BUTIKEN (valfritt)</label>
+    <textarea class="field" id="msg-in" placeholder="Skriv ett meddelande om det behövs…"></textarea>
+    <button class="btn btn-red" style="margin-top:20px;" id="send-btn" onclick="sendOrder()">📤 Skicka beställning</button>
+    <button class="btn btn-outline" onclick="go('s-scan')">← Tillbaka</button>
+  </div>
+</div>
+
+<div class="screen" id="s-confirm">
+  <div class="confirm-icon">✅</div>
+  <div class="confirm-h">Skickat!</div>
+  <div class="confirm-p" id="confirm-p"></div>
+  <div class="confirm-detail" id="confirm-d"></div>
+  <button class="btn" style="background:#fff;color:var(--green);max-width:280px;margin-top:8px;" onclick="reset()">Ny beställning</button>
+</div>
+
+<div class="screen" id="s-store">
+  <div class="hdr">
+    <div><div class="hdr-title">Butiken</div><div class="hdr-sub">Läs av med scannern — radera när klar</div></div>
+    <button class="hdr-back" onclick="go('s-start')">✕</button>
+  </div>
+  <div class="content" id="store-content" style="padding-bottom:20px;">
+    <div class="loading">Hämtar…</div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- Firebase via module script — most reliable method -->
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, updateDoc, query, orderBy, serverTimestamp, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBmMWfTtTFzj2-TG1M-zcyD3CNwxBZU54c",
+  authDomain: "keller-glenn.firebaseapp.com",
+  projectId: "keller-glenn",
+  storageBucket: "keller-glenn.firebasestorage.app",
+  messagingSenderId: "476962061001",
+  appId: "1:476962061001:web:f1251f19b4990fe0226b18"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const ordersRef = collection(db, 'orders');
+
+// ── STATE ─────────────────────────────────────
+let state = { name: '', project: '', items: [] };
+let pendingCode = '';
+let scannerActive = false;
+let zxingReader = null;
+let lastCode = '', lastTime = 0;
+let toastTimer = null;
+let storeUnsubscribe = null;
+
+// ── LIVE BADGE ────────────────────────────────
+onSnapshot(query(ordersRef), (snap) => {
+  const badge = document.getElementById('store-badge');
+  if (snap.size > 0) {
+    badge.textContent = snap.size;
+    badge.style.display = 'inline-block';
+  } else {
+    badge.style.display = 'none';
+  }
+});
+
+// ── NAV ───────────────────────────────────────
+window.go = function(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+};
+
+function showToast(msg, isError) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.toggle('error', !!isError);
+  el.classList.add('show');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+// ── START ─────────────────────────────────────
+window.pickName = function(name) {
+  state.name = name;
+  document.getElementById('hdr-name').textContent = name;
+  document.getElementById('proj-in').value = '';
+  document.getElementById('proj-btn').disabled = true;
+  go('s-project');
+};
+
+// ── PROJECT ───────────────────────────────────
+window.checkProj = function() {
+  const v = document.getElementById('proj-in').value.trim();
+  document.getElementById('proj-btn').disabled = v.length === 0;
+};
+
+window.goScan = function() {
+  state.project = document.getElementById('proj-in').value.trim();
+  state.items = [];
+  pendingCode = '';
+  hideResultCard();
+  document.getElementById('scan-sub').textContent = state.name + ' · ' + state.project;
+  renderItems();
+  go('s-scan');
+};
+
+window.goBack = function() {
+  if (scannerActive) stopScanner();
+  go('s-project');
+};
+
+// ── SCANNER ───────────────────────────────────
+window.toggleScanner = function() {
+  if (scannerActive) { stopScanner(); } else { startScanner(); }
+};
+
+function startScanner() {
+  scannerActive = true;
+  document.getElementById('scanner-box').classList.add('scanner-active');
+  document.getElementById('scan-ph').style.display = 'none';
+  document.getElementById('cam-btn').textContent = '⏹ Stoppa kamera';
+  document.getElementById('cam-btn').classList.add('scanning');
+  try {
+    const hints = new Map();
+    hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
+      ZXing.BarcodeFormat.EAN_13, ZXing.BarcodeFormat.EAN_8,
+      ZXing.BarcodeFormat.CODE_128, ZXing.BarcodeFormat.CODE_39,
+      ZXing.BarcodeFormat.UPC_A, ZXing.BarcodeFormat.UPC_E,
+      ZXing.BarcodeFormat.ITF, ZXing.BarcodeFormat.RSS_14
+    ]);
+    hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
+    zxingReader = new ZXing.BrowserMultiFormatReader(hints, 300);
+    zxingReader.decodeFromConstraints(
+      { video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } } },
+      document.getElementById('scanner-video'),
+      (result, err) => {
+        if (result) {
+          const code = result.getText();
+          const now = Date.now();
+          if (code === lastCode && (now - lastTime) < 3000) return;
+          lastCode = code; lastTime = now;
+          if (navigator.vibrate) navigator.vibrate([80, 30, 80]);
+          stopScanner();
+          showResultCard(code);
+        }
+      }
+    );
+  } catch(e) {
+    showToast('Kamera ej tillgänglig', true);
+    stopScanner();
+  }
+}
+
+function stopScanner() {
+  scannerActive = false;
+  document.getElementById('scanner-box').classList.remove('scanner-active');
+  document.getElementById('scan-ph').style.display = 'flex';
+  document.getElementById('cam-btn').textContent = '📷 Starta kamera';
+  document.getElementById('cam-btn').classList.remove('scanning');
+  try { if (zxingReader) zxingReader.reset(); } catch(e) {}
+}
+
+// ── RESULT CARD ───────────────────────────────
+function showResultCard(code) {
+  pendingCode = code;
+  const wrap = document.getElementById('result-bc-svg');
+  wrap.innerHTML = '<svg id="result-svg"></svg>';
+  drawBarcode('result-svg', code);
+  document.getElementById('result-qty').value = '';
+  document.getElementById('result-note').value = '';
+  document.getElementById('result-card').classList.add('visible');
+  setTimeout(() => document.getElementById('result-qty').focus(), 100);
+}
+
+function hideResultCard() {
+  document.getElementById('result-card').classList.remove('visible');
+  pendingCode = '';
+}
+
+window.confirmResult = function() {
+  if (!pendingCode) return;
+  const qty = parseInt(document.getElementById('result-qty').value) || 1;
+  const note = document.getElementById('result-note').value.trim();
+  state.items.push({ barcode: pendingCode, qty, note });
+  renderItems();
+  hideResultCard();
+  showToast('✓ Tillagd');
+};
+
+window.discardResult = function() { hideResultCard(); };
+
+// ── MANUAL ────────────────────────────────────
+window.addManual = function() {
+  const inp = document.getElementById('manual-in');
+  const v = inp.value.trim();
+  if (!v) return;
+  showResultCard(v);
+  inp.value = '';
+};
+
+// ── ITEMS ─────────────────────────────────────
+function renderItems() {
+  const list = document.getElementById('items-list');
+  document.getElementById('item-count').textContent = state.items.length;
+  document.getElementById('scan-next').disabled = state.items.length === 0;
+  if (state.items.length === 0) {
+    list.innerHTML = '<div class="empty">Inga produkter ännu.<br>Skanna eller skriv in en streckkod.</div>';
+    return;
+  }
+  list.innerHTML = state.items.map((item, i) =>
+    `<div class="item-card">
+      <div class="item-bc-wrap"><svg id="bc${i}"></svg></div>
+      <div class="item-meta">
+        <div>${item.note ? `<div class="item-kulor">📝 ${item.note}</div>` : ''}</div>
+        <div class="item-qty-badge">×${item.qty}</div>
+      </div>
+      <button class="del-btn" onclick="delItem(${i})">✕</button>
+    </div>`
+  ).join('');
+  state.items.forEach((item, i) => drawBarcode('bc' + i, item.barcode));
+}
+
+window.delItem = function(i) { state.items.splice(i, 1); renderItems(); };
+
+// ── BARCODE ───────────────────────────────────
+function drawBarcode(svgId, code) {
+  try {
+    JsBarcode('#' + svgId, code, {
+      format: guessFormat(code), width: 2, height: 55,
+      displayValue: true, fontSize: 12, margin: 6,
+      background: '#ffffff', lineColor: '#000000'
+    });
+  } catch(e) {
+    const el = document.getElementById(svgId);
+    if (el) el.outerHTML = `<div style="font-family:monospace;font-size:13px;text-align:center;padding:6px;">${code}</div>`;
+  }
+}
+
+function guessFormat(code) {
+  if (/^\d{13}$/.test(code)) return 'EAN13';
+  if (/^\d{8}$/.test(code)) return 'EAN8';
+  if (/^\d{12}$/.test(code)) return 'UPC';
+  return 'CODE128';
+}
+
+// ── MESSAGE ───────────────────────────────────
+window.goMsg = function() {
+  if (scannerActive) stopScanner();
+  document.getElementById('msg-sub').textContent = state.name + ' · ' + state.project;
+  const tot = state.items.reduce((s, x) => s + x.qty, 0);
+  document.getElementById('summary-box').innerHTML =
+    `<div class="sum-row"><span>Namn</span><strong>${state.name}</strong></div>
+     <div class="sum-row"><span>Projekt</span><strong>${state.project}</strong></div>
+     <div class="sum-row"><span>Produkter</span><strong>${state.items.length} art. (${tot} st)</strong></div>`;
+  document.getElementById('msg-in').value = '';
+  go('s-msg');
+};
+
+// ── SEND ──────────────────────────────────────
+window.sendOrder = async function() {
+  const btn = document.getElementById('send-btn');
+  btn.disabled = true;
+  btn.textContent = 'Skickar…';
+  const msg = document.getElementById('msg-in').value.trim();
+  try {
+    await addDoc(ordersRef, {
+      name: state.name,
+      project: state.project,
+      items: JSON.parse(JSON.stringify(state.items)),
+      message: msg,
+      time: serverTimestamp(),
+      read: false
+    });
+    document.getElementById('confirm-p').textContent = 'Beställning från ' + state.name + ' är skickad.';
+    document.getElementById('confirm-d').textContent = state.project + ' · ' + state.items.length + ' artiklar';
+    go('s-confirm');
+  } catch(err) {
+    showToast('Fel: ' + err.message, true);
+    btn.disabled = false;
+    btn.textContent = '📤 Skicka beställning';
+  }
+};
+
+window.reset = function() {
+  state = { name: '', project: '', items: [] };
+  go('s-start');
+};
+
+// ── BUTIKEN ───────────────────────────────────
+window.openStore = function() {
+  go('s-store');
+  document.getElementById('store-content').innerHTML = '<div class="loading">Hämtar beställningar…</div>';
+  if (storeUnsubscribe) storeUnsubscribe();
+  storeUnsubscribe = onSnapshot(
+    query(ordersRef, orderBy('time', 'desc')),
+    (snap) => {
+      const orders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderStore(orders);
+    },
+    (err) => {
+      document.getElementById('store-content').innerHTML = '<div class="empty">Fel: ' + err.message + '</div>';
+    }
+  );
+};
+
+function renderStore(orders) {
+  const el = document.getElementById('store-content');
+  if (orders.length === 0) {
+    el.innerHTML = '<div class="store-empty"><div class="icon">✅</div><p>Inga beställningar att hantera</p></div>';
+    return;
+  }
+  el.innerHTML = orders.map((order, i) => {
+    const t = order.time ? order.time.toDate() : new Date();
+    const ts = t.toLocaleDateString('sv-SE', { weekday:'short', day:'numeric', month:'short' }) + ' ' +
+               t.toLocaleTimeString('sv-SE', { hour:'2-digit', minute:'2-digit' });
+    const tot = order.items.reduce((s, x) => s + x.qty, 0);
+    const itemsHtml = order.items.map((item, k) =>
+      `<div class="store-item">
+        <svg id="sbc${i}_${k}"></svg>
+        <div class="store-item-meta">
+          <div class="store-item-qty">×${item.qty}</div>
+          ${item.note ? `<div class="store-item-kulor">📝 ${item.note}</div>` : ''}
+        </div>
+      </div>`
+    ).join('');
+    return `<div class="store-order">
+      <div class="store-order-hdr" onclick="toggleStoreOrder(${i},'${order.id}')">
+        <div>
+          <div class="store-order-name">${!order.read ? '<span class="new-dot"></span>' : ''}${order.name}</div>
+          <div class="store-order-proj">Projekt ${order.project} · ${order.items.length} art. · ${tot} st</div>
+        </div>
+        <div class="store-order-time">${ts}</div>
+      </div>
+      <div class="store-order-body" id="sb${i}" data-items='${JSON.stringify(order.items)}'>
+        ${itemsHtml}
+        ${order.message ? `<div class="store-msg"><div class="store-msg-lbl">Meddelande</div>${order.message}</div>` : ''}
+        <button class="store-delete-btn" onclick="deleteOrder('${order.id}',event)">🗑 Radera beställning</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.toggleStoreOrder = async function(i, orderId) {
+  const el = document.getElementById('sb' + i);
+  const wasOpen = el.classList.contains('open');
+  el.classList.toggle('open');
+  if (!wasOpen) {
+    const items = JSON.parse(el.dataset.items || '[]');
+    items.forEach((item, k) => drawBarcode('sbc' + i + '_' + k, item.barcode));
+    try {
+      const snap = await getDoc(doc(db, 'orders', orderId));
+      if (snap.exists() && !snap.data().read) {
+        await updateDoc(doc(db, 'orders', orderId), { read: true });
+      }
+    } catch(e) {}
+  }
+};
+
+window.deleteOrder = async function(orderId, e) {
+  e.stopPropagation();
+  if (!confirm('Radera beställningen?')) return;
+  try {
+    await deleteDoc(doc(db, 'orders', orderId));
+  } catch(err) {
+    showToast('Fel: ' + err.message, true);
+  }
+};
+</script>
+</body>
+</html>
