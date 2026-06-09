@@ -126,8 +126,8 @@ textarea.field::placeholder { color:#ccc; }
 .store-order-hdr { background:var(--ink); color:var(--bg); padding:14px 16px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; }
 .store-order-hdr:active { opacity:.85; }
 .store-order-name { font-family:'Syne',sans-serif; font-size:16px; font-weight:800; }
-.store-order-proj { font-family:'DM Mono',monospace; font-size:12px; color:#aaa; margin-top:2px; }
-.store-order-time { font-family:'DM Mono',monospace; font-size:11px; color:#888; text-align:right; }
+.store-order-proj { font-family:'DM Mono',monospace; font-size:15px; color:#aaa; margin-top:4px; }
+.store-order-time { font-family:'DM Mono',monospace; font-size:13px; color:#888; text-align:right; }
 .store-order-body { padding:16px; display:none; }
 .store-order-body.open { display:block; }
 .store-item { padding:14px 0; border-bottom:1px solid var(--border); text-align:center; }
@@ -525,7 +525,7 @@ window.openStore = () => {
             </div>
             <div class="store-order-time">${ts}</div>
           </div>
-          <div class="store-order-body" id="sb${i}" data-items='${JSON.stringify(order.items).replace(/'/g,"&#39;")}'>
+          <div class="store-order-body open" id="sb${i}" data-items='${JSON.stringify(order.items).replace(/'/g,"&#39;")}'>
             ${order.items.map((item, k) => `
               <div class="store-item">
                 <svg id="sbc${i}_${k}"></svg>
@@ -539,6 +539,11 @@ window.openStore = () => {
           </div>
         </div>`;
       }).join('');
+      // Rendera streckkoder och markera som lästa direkt
+      orders.forEach((order, i) => {
+        order.items.forEach((item, k) => drawBarcode('sbc' + i + '_' + k, item.barcode));
+        if (!order.read) updateDoc(doc(db, 'orders', order.id), { read: true }).catch(() => {});
+      });
     },
     err => { document.getElementById('store-content').innerHTML = '<div class="empty">Fel: ' + err.message + '</div>'; }
   );
