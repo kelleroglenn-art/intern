@@ -6,8 +6,6 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Keller och Glenn</title>
-<script src="https://unpkg.com/@zxing/library@0.19.1/umd/index.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -44,8 +42,8 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--i
 
 .proj-wrap { display: flex; align-items: center; background: var(--surface); border: 2px solid var(--border); border-radius: 10px; padding: 13px 16px; margin-bottom: 24px; }
 .proj-wrap:focus-within { border-color: var(--blue); }
-.proj-wrap input { border: none; outline: none; font-family: 'DM Mono', monospace; font-size: 22px; font-weight: 500; color: var(--ink); background: transparent; width: 100%; }
-.proj-wrap input::placeholder { color: #ccc; font-weight: 400; font-size: 17px; }
+.proj-wrap input { border: none; outline: none; font-family: 'DM Mono', monospace; font-size: 28px; font-weight: 500; color: var(--ink); background: transparent; width: 100%; }
+.proj-wrap input::placeholder { color: #ccc; font-weight: 400; font-size: 22px; }
 
 .btn { width: 100%; border: none; border-radius: 11px; padding: 17px; font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; cursor: pointer; transition: opacity .15s, transform .1s; }
 .btn:active { opacity: .82; transform: scale(.98); }
@@ -79,17 +77,17 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--i
 .scan-result-bc { text-align:center; margin-bottom:14px; }
 .scan-result-bc svg { max-width:100%; height:auto; display:block; margin:0 auto; }
 .scan-result-fields { display:flex; flex-direction:column; gap:10px; }
-.field-input { width:100%; background:var(--bg); border:2px solid var(--border); border-radius:9px; padding:13px 14px; font-family:'DM Mono',monospace; font-size:22px; font-weight:500; color:var(--ink); outline:none; text-align:center; }
+.field-input { width:100%; background:var(--bg); border:2px solid var(--border); border-radius:9px; padding:14px; font-family:'DM Mono',monospace; font-size:28px; font-weight:500; color:var(--ink); outline:none; text-align:center; }
 .field-input:focus { border-color:var(--blue); }
-.field-input::placeholder { color:#ccc; font-size:15px; font-weight:400; }
-.field-input.note { font-size:16px; text-align:left; }
+.field-input::placeholder { color:#ccc; font-size:18px; font-weight:400; }
+.field-input.note { font-size:18px; text-align:left; }
 .scan-result-btns { display:flex; gap:9px; margin-top:12px; }
 .scan-result-btns .btn { margin:0; flex:1; padding:14px; font-size:15px; }
 
 .manual-row { display:flex; gap:8px; margin-bottom:16px; }
-.manual-in { flex:1; background:var(--surface); border:2px solid var(--border); border-radius:9px; padding:12px 14px; font-family:'DM Mono',monospace; font-size:15px; color:var(--ink); outline:none; }
+.manual-in { flex:1; background:var(--surface); border:2px solid var(--border); border-radius:9px; padding:14px; font-family:'DM Mono',monospace; font-size:18px; color:var(--ink); outline:none; }
 .manual-in:focus { border-color:var(--blue); }
-.manual-in::placeholder { color:#ccc; font-size:13px; }
+.manual-in::placeholder { color:#ccc; font-size:15px; }
 .btn-add { background:var(--ink); color:#fff; border:none; border-radius:9px; padding:12px 16px; font-family:'Syne',sans-serif; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap; }
 .btn-add:active { opacity:.8; }
 
@@ -110,10 +108,10 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--i
 .bottom-bar .btn { margin:0; }
 
 .summary-box { background:var(--surface); border:2px solid var(--border); border-radius:11px; padding:14px 16px; margin-bottom:22px; }
-.sum-row { display:flex; justify-content:space-between; align-items:baseline; font-family:'DM Mono',monospace; font-size:12px; color:var(--muted); margin-bottom:5px; }
+.sum-row { display:flex; justify-content:space-between; align-items:baseline; font-family:'DM Mono',monospace; font-size:14px; color:var(--muted); margin-bottom:5px; }
 .sum-row:last-child { margin-bottom:0; }
-.sum-row strong { color:var(--ink); font-size:14px; }
-textarea.field { width:100%; min-height:130px; background:var(--surface); border:2px solid var(--border); border-radius:10px; padding:14px 16px; font-family:'DM Sans',sans-serif; font-size:15px; color:var(--ink); outline:none; resize:none; line-height:1.5; }
+.sum-row strong { color:var(--ink); font-size:18px; }
+textarea.field { width:100%; min-height:130px; background:var(--surface); border:2px solid var(--border); border-radius:10px; padding:14px 16px; font-family:'DM Sans',sans-serif; font-size:18px; color:var(--ink); outline:none; resize:none; line-height:1.5; }
 textarea.field:focus { border-color:var(--blue); }
 textarea.field::placeholder { color:#ccc; }
 
@@ -270,25 +268,26 @@ textarea.field::placeholder { color:#ccc; }
 
 <div id="toast"></div>
 
-<!-- Firebase via module script — most reliable method -->
+<!-- ZXing och JsBarcode laddas först -->
+<script src="https://unpkg.com/@zxing/library@0.19.1/umd/index.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+
+<!-- Firebase via module — fungerar på HTTPS/GitHub Pages -->
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, updateDoc, query, orderBy, serverTimestamp, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
-const firebaseConfig = {
+const app = initializeApp({
   apiKey: "AIzaSyBmMWfTtTFzj2-TG1M-zcyD3CNwxBZU54c",
   authDomain: "keller-glenn.firebaseapp.com",
   projectId: "keller-glenn",
   storageBucket: "keller-glenn.firebasestorage.app",
   messagingSenderId: "476962061001",
   appId: "1:476962061001:web:f1251f19b4990fe0226b18"
-};
-
-const app = initializeApp(firebaseConfig);
+});
 const db = getFirestore(app);
 const ordersRef = collection(db, 'orders');
 
-// ── STATE ─────────────────────────────────────
 let state = { name: '', project: '', items: [] };
 let pendingCode = '';
 let scannerActive = false;
@@ -297,69 +296,108 @@ let lastCode = '', lastTime = 0;
 let toastTimer = null;
 let storeUnsubscribe = null;
 
-// ── LIVE BADGE ────────────────────────────────
-onSnapshot(query(ordersRef), (snap) => {
+// Live badge
+onSnapshot(query(ordersRef), snap => {
   const badge = document.getElementById('store-badge');
-  if (snap.size > 0) {
-    badge.textContent = snap.size;
-    badge.style.display = 'inline-block';
-  } else {
-    badge.style.display = 'none';
-  }
+  if (snap.size > 0) { badge.textContent = snap.size; badge.style.display = 'inline-block'; }
+  else { badge.style.display = 'none'; }
 });
 
-// ── NAV ───────────────────────────────────────
-window.go = function(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  window.scrollTo(0, 0);
-};
-
+// ── HELPERS ──────────────────────────────────
 function showToast(msg, isError) {
   const el = document.getElementById('toast');
   el.textContent = msg;
   el.classList.toggle('error', !!isError);
   el.classList.add('show');
   if (toastTimer) clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 2000);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
 }
 
-// ── START ─────────────────────────────────────
-window.pickName = function(name) {
+function drawBarcode(svgId, code) {
+  try {
+    JsBarcode('#' + svgId, code, {
+      format: /^\d{13}$/.test(code) ? 'EAN13' : /^\d{8}$/.test(code) ? 'EAN8' : /^\d{12}$/.test(code) ? 'UPC' : 'CODE128',
+      width: 2, height: 55, displayValue: true, fontSize: 12, margin: 6,
+      background: '#ffffff', lineColor: '#000000'
+    });
+  } catch(e) {
+    const el = document.getElementById(svgId);
+    if (el) el.outerHTML = `<div style="font-family:monospace;font-size:13px;text-align:center;padding:6px;">${code}</div>`;
+  }
+}
+
+function renderItems() {
+  const list = document.getElementById('items-list');
+  document.getElementById('item-count').textContent = state.items.length;
+  document.getElementById('scan-next').disabled = state.items.length === 0;
+  if (state.items.length === 0) {
+    list.innerHTML = '<div class="empty">Inga produkter ännu.<br>Skanna eller skriv in en streckkod.</div>';
+    return;
+  }
+  list.innerHTML = state.items.map((item, i) => `
+    <div class="item-card">
+      <div class="item-bc-wrap"><svg id="bc${i}"></svg></div>
+      <div class="item-meta">
+        <div>${item.note ? `<div class="item-kulor">📝 ${item.note}</div>` : ''}</div>
+        <div class="item-qty-badge">×${item.qty}</div>
+      </div>
+      <button class="del-btn" onclick="delItem(${i})">✕</button>
+    </div>`).join('');
+  state.items.forEach((item, i) => drawBarcode('bc' + i, item.barcode));
+}
+
+function stopScanner() {
+  scannerActive = false;
+  document.getElementById('scanner-box').classList.remove('scanner-active');
+  document.getElementById('scan-ph').style.display = 'flex';
+  document.getElementById('cam-btn').textContent = '📷 Starta kamera';
+  document.getElementById('cam-btn').classList.remove('scanning');
+  try { if (zxingReader) zxingReader.reset(); } catch(e) {}
+}
+
+function showResultCard(code) {
+  pendingCode = code;
+  document.getElementById('result-bc-svg').innerHTML = '<svg id="result-svg"></svg>';
+  drawBarcode('result-svg', code);
+  document.getElementById('result-qty').value = '';
+  document.getElementById('result-note').value = '';
+  document.getElementById('result-card').classList.add('visible');
+  setTimeout(() => document.getElementById('result-qty').focus(), 100);
+}
+
+// ── GLOBAL FUNCTIONS ──────────────────────────
+window.go = id => {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+};
+
+window.pickName = name => {
   state.name = name;
   document.getElementById('hdr-name').textContent = name;
   document.getElementById('proj-in').value = '';
   document.getElementById('proj-btn').disabled = true;
-  go('s-project');
+  window.go('s-project');
 };
 
-// ── PROJECT ───────────────────────────────────
-window.checkProj = function() {
-  const v = document.getElementById('proj-in').value.trim();
-  document.getElementById('proj-btn').disabled = v.length === 0;
+window.checkProj = () => {
+  document.getElementById('proj-btn').disabled = document.getElementById('proj-in').value.trim().length === 0;
 };
 
-window.goScan = function() {
+window.goScan = () => {
   state.project = document.getElementById('proj-in').value.trim();
   state.items = [];
   pendingCode = '';
-  hideResultCard();
+  document.getElementById('result-card').classList.remove('visible');
   document.getElementById('scan-sub').textContent = state.name + ' · ' + state.project;
   renderItems();
-  go('s-scan');
+  window.go('s-scan');
 };
 
-window.goBack = function() {
-  if (scannerActive) stopScanner();
-  go('s-project');
-};
+window.goBack = () => { if (scannerActive) stopScanner(); window.go('s-project'); };
 
-// ── SCANNER ───────────────────────────────────
-window.toggleScanner = function() {
-  if (scannerActive) { stopScanner(); } else { startScanner(); }
-};
-
-function startScanner() {
+window.toggleScanner = () => {
+  if (scannerActive) { stopScanner(); return; }
   scannerActive = true;
   document.getElementById('scanner-box').classList.add('scanner-active');
   document.getElementById('scan-ph').style.display = 'none';
@@ -378,64 +416,39 @@ function startScanner() {
     zxingReader.decodeFromConstraints(
       { video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } } },
       document.getElementById('scanner-video'),
-      (result, err) => {
-        if (result) {
-          const code = result.getText();
-          const now = Date.now();
-          if (code === lastCode && (now - lastTime) < 3000) return;
-          lastCode = code; lastTime = now;
-          if (navigator.vibrate) navigator.vibrate([80, 30, 80]);
-          stopScanner();
-          showResultCard(code);
-        }
+      (result) => {
+        if (!result) return;
+        const code = result.getText();
+        const now = Date.now();
+        if (code === lastCode && (now - lastTime) < 3000) return;
+        lastCode = code; lastTime = now;
+        if (navigator.vibrate) navigator.vibrate([80, 30, 80]);
+        stopScanner();
+        showResultCard(code);
       }
     );
-  } catch(e) {
-    showToast('Kamera ej tillgänglig', true);
-    stopScanner();
-  }
-}
+  } catch(e) { showToast('Kamera ej tillgänglig', true); stopScanner(); }
+};
 
-function stopScanner() {
-  scannerActive = false;
-  document.getElementById('scanner-box').classList.remove('scanner-active');
-  document.getElementById('scan-ph').style.display = 'flex';
-  document.getElementById('cam-btn').textContent = '📷 Starta kamera';
-  document.getElementById('cam-btn').classList.remove('scanning');
-  try { if (zxingReader) zxingReader.reset(); } catch(e) {}
-}
-
-// ── RESULT CARD ───────────────────────────────
-function showResultCard(code) {
-  pendingCode = code;
-  const wrap = document.getElementById('result-bc-svg');
-  wrap.innerHTML = '<svg id="result-svg"></svg>';
-  drawBarcode('result-svg', code);
-  document.getElementById('result-qty').value = '';
-  document.getElementById('result-note').value = '';
-  document.getElementById('result-card').classList.add('visible');
-  setTimeout(() => document.getElementById('result-qty').focus(), 100);
-}
-
-function hideResultCard() {
+window.confirmResult = () => {
+  if (!pendingCode) return;
+  state.items.push({
+    barcode: pendingCode,
+    qty: parseInt(document.getElementById('result-qty').value) || 1,
+    note: document.getElementById('result-note').value.trim()
+  });
+  renderItems();
   document.getElementById('result-card').classList.remove('visible');
   pendingCode = '';
-}
-
-window.confirmResult = function() {
-  if (!pendingCode) return;
-  const qty = parseInt(document.getElementById('result-qty').value) || 1;
-  const note = document.getElementById('result-note').value.trim();
-  state.items.push({ barcode: pendingCode, qty, note });
-  renderItems();
-  hideResultCard();
   showToast('✓ Tillagd');
 };
 
-window.discardResult = function() { hideResultCard(); };
+window.discardResult = () => {
+  document.getElementById('result-card').classList.remove('visible');
+  pendingCode = '';
+};
 
-// ── MANUAL ────────────────────────────────────
-window.addManual = function() {
+window.addManual = () => {
   const inp = document.getElementById('manual-in');
   const v = inp.value.trim();
   if (!v) return;
@@ -443,53 +456,9 @@ window.addManual = function() {
   inp.value = '';
 };
 
-// ── ITEMS ─────────────────────────────────────
-function renderItems() {
-  const list = document.getElementById('items-list');
-  document.getElementById('item-count').textContent = state.items.length;
-  document.getElementById('scan-next').disabled = state.items.length === 0;
-  if (state.items.length === 0) {
-    list.innerHTML = '<div class="empty">Inga produkter ännu.<br>Skanna eller skriv in en streckkod.</div>';
-    return;
-  }
-  list.innerHTML = state.items.map((item, i) =>
-    `<div class="item-card">
-      <div class="item-bc-wrap"><svg id="bc${i}"></svg></div>
-      <div class="item-meta">
-        <div>${item.note ? `<div class="item-kulor">📝 ${item.note}</div>` : ''}</div>
-        <div class="item-qty-badge">×${item.qty}</div>
-      </div>
-      <button class="del-btn" onclick="delItem(${i})">✕</button>
-    </div>`
-  ).join('');
-  state.items.forEach((item, i) => drawBarcode('bc' + i, item.barcode));
-}
+window.delItem = i => { state.items.splice(i, 1); renderItems(); };
 
-window.delItem = function(i) { state.items.splice(i, 1); renderItems(); };
-
-// ── BARCODE ───────────────────────────────────
-function drawBarcode(svgId, code) {
-  try {
-    JsBarcode('#' + svgId, code, {
-      format: guessFormat(code), width: 2, height: 55,
-      displayValue: true, fontSize: 12, margin: 6,
-      background: '#ffffff', lineColor: '#000000'
-    });
-  } catch(e) {
-    const el = document.getElementById(svgId);
-    if (el) el.outerHTML = `<div style="font-family:monospace;font-size:13px;text-align:center;padding:6px;">${code}</div>`;
-  }
-}
-
-function guessFormat(code) {
-  if (/^\d{13}$/.test(code)) return 'EAN13';
-  if (/^\d{8}$/.test(code)) return 'EAN8';
-  if (/^\d{12}$/.test(code)) return 'UPC';
-  return 'CODE128';
-}
-
-// ── MESSAGE ───────────────────────────────────
-window.goMsg = function() {
+window.goMsg = () => {
   if (scannerActive) stopScanner();
   document.getElementById('msg-sub').textContent = state.name + ' · ' + state.project;
   const tot = state.items.reduce((s, x) => s + x.qty, 0);
@@ -498,117 +467,102 @@ window.goMsg = function() {
      <div class="sum-row"><span>Projekt</span><strong>${state.project}</strong></div>
      <div class="sum-row"><span>Produkter</span><strong>${state.items.length} art. (${tot} st)</strong></div>`;
   document.getElementById('msg-in').value = '';
-  go('s-msg');
+  window.go('s-msg');
 };
 
-// ── SEND ──────────────────────────────────────
-window.sendOrder = async function() {
+window.sendOrder = async () => {
   const btn = document.getElementById('send-btn');
   btn.disabled = true;
-  btn.textContent = 'Skickar…';
+  btn.textContent = '⏳ Skickar…';
   const msg = document.getElementById('msg-in').value.trim();
+  const timeout = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error('Timeout — prova att stänga av och slå på wifi och försök igen')), 10000)
+  );
   try {
-    await addDoc(ordersRef, {
-      name: state.name,
-      project: state.project,
-      items: JSON.parse(JSON.stringify(state.items)),
-      message: msg,
-      time: serverTimestamp(),
-      read: false
-    });
+    await Promise.race([
+      addDoc(ordersRef, {
+        name: state.name, project: state.project,
+        items: JSON.parse(JSON.stringify(state.items)),
+        message: msg, time: serverTimestamp(), read: false
+      }),
+      timeout
+    ]);
     document.getElementById('confirm-p').textContent = 'Beställning från ' + state.name + ' är skickad.';
     document.getElementById('confirm-d').textContent = state.project + ' · ' + state.items.length + ' artiklar';
-    go('s-confirm');
+    window.go('s-confirm');
   } catch(err) {
-    showToast('Fel: ' + err.message, true);
+    showToast(err.message, true);
     btn.disabled = false;
     btn.textContent = '📤 Skicka beställning';
   }
 };
 
-window.reset = function() {
-  state = { name: '', project: '', items: [] };
-  go('s-start');
-};
+window.reset = () => { state = { name: '', project: '', items: [] }; window.go('s-start'); };
 
-// ── BUTIKEN ───────────────────────────────────
-window.openStore = function() {
-  go('s-store');
+window.openStore = () => {
+  window.go('s-store');
   document.getElementById('store-content').innerHTML = '<div class="loading">Hämtar beställningar…</div>';
   if (storeUnsubscribe) storeUnsubscribe();
   storeUnsubscribe = onSnapshot(
     query(ordersRef, orderBy('time', 'desc')),
-    (snap) => {
+    snap => {
       const orders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      renderStore(orders);
+      const el = document.getElementById('store-content');
+      if (orders.length === 0) {
+        el.innerHTML = '<div class="store-empty"><div class="icon">✅</div><p>Inga beställningar att hantera</p></div>';
+        return;
+      }
+      el.innerHTML = orders.map((order, i) => {
+        const t = order.time ? order.time.toDate() : new Date();
+        const ts = t.toLocaleDateString('sv-SE', { weekday:'short', day:'numeric', month:'short' }) + ' ' +
+                   t.toLocaleTimeString('sv-SE', { hour:'2-digit', minute:'2-digit' });
+        const tot = order.items.reduce((s, x) => s + x.qty, 0);
+        return `<div class="store-order">
+          <div class="store-order-hdr" onclick="toggleStoreOrder(${i},'${order.id}')">
+            <div>
+              <div class="store-order-name">${!order.read ? '<span class="new-dot"></span>' : ''}${order.name}</div>
+              <div class="store-order-proj">Projekt ${order.project} · ${order.items.length} art. · ${tot} st</div>
+            </div>
+            <div class="store-order-time">${ts}</div>
+          </div>
+          <div class="store-order-body" id="sb${i}" data-items='${JSON.stringify(order.items).replace(/'/g,"&#39;")}'>
+            ${order.items.map((item, k) => `
+              <div class="store-item">
+                <svg id="sbc${i}_${k}"></svg>
+                <div class="store-item-meta">
+                  <div class="store-item-qty">×${item.qty}</div>
+                  ${item.note ? `<div class="store-item-kulor">📝 ${item.note}</div>` : ''}
+                </div>
+              </div>`).join('')}
+            ${order.message ? `<div class="store-msg"><div class="store-msg-lbl">Meddelande</div>${order.message}</div>` : ''}
+            <button class="store-delete-btn" onclick="deleteOrder('${order.id}',event)">🗑 Radera beställning</button>
+          </div>
+        </div>`;
+      }).join('');
     },
-    (err) => {
-      document.getElementById('store-content').innerHTML = '<div class="empty">Fel: ' + err.message + '</div>';
-    }
+    err => { document.getElementById('store-content').innerHTML = '<div class="empty">Fel: ' + err.message + '</div>'; }
   );
 };
 
-function renderStore(orders) {
-  const el = document.getElementById('store-content');
-  if (orders.length === 0) {
-    el.innerHTML = '<div class="store-empty"><div class="icon">✅</div><p>Inga beställningar att hantera</p></div>';
-    return;
-  }
-  el.innerHTML = orders.map((order, i) => {
-    const t = order.time ? order.time.toDate() : new Date();
-    const ts = t.toLocaleDateString('sv-SE', { weekday:'short', day:'numeric', month:'short' }) + ' ' +
-               t.toLocaleTimeString('sv-SE', { hour:'2-digit', minute:'2-digit' });
-    const tot = order.items.reduce((s, x) => s + x.qty, 0);
-    const itemsHtml = order.items.map((item, k) =>
-      `<div class="store-item">
-        <svg id="sbc${i}_${k}"></svg>
-        <div class="store-item-meta">
-          <div class="store-item-qty">×${item.qty}</div>
-          ${item.note ? `<div class="store-item-kulor">📝 ${item.note}</div>` : ''}
-        </div>
-      </div>`
-    ).join('');
-    return `<div class="store-order">
-      <div class="store-order-hdr" onclick="toggleStoreOrder(${i},'${order.id}')">
-        <div>
-          <div class="store-order-name">${!order.read ? '<span class="new-dot"></span>' : ''}${order.name}</div>
-          <div class="store-order-proj">Projekt ${order.project} · ${order.items.length} art. · ${tot} st</div>
-        </div>
-        <div class="store-order-time">${ts}</div>
-      </div>
-      <div class="store-order-body" id="sb${i}" data-items='${JSON.stringify(order.items)}'>
-        ${itemsHtml}
-        ${order.message ? `<div class="store-msg"><div class="store-msg-lbl">Meddelande</div>${order.message}</div>` : ''}
-        <button class="store-delete-btn" onclick="deleteOrder('${order.id}',event)">🗑 Radera beställning</button>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-window.toggleStoreOrder = async function(i, orderId) {
+window.toggleStoreOrder = async (i, orderId) => {
   const el = document.getElementById('sb' + i);
   const wasOpen = el.classList.contains('open');
   el.classList.toggle('open');
   if (!wasOpen) {
-    const items = JSON.parse(el.dataset.items || '[]');
-    items.forEach((item, k) => drawBarcode('sbc' + i + '_' + k, item.barcode));
     try {
+      const items = JSON.parse(el.dataset.items || '[]');
+      items.forEach((item, k) => drawBarcode('sbc' + i + '_' + k, item.barcode));
       const snap = await getDoc(doc(db, 'orders', orderId));
-      if (snap.exists() && !snap.data().read) {
-        await updateDoc(doc(db, 'orders', orderId), { read: true });
-      }
+      if (snap.exists() && !snap.data().read) await updateDoc(doc(db, 'orders', orderId), { read: true });
     } catch(e) {}
   }
 };
 
-window.deleteOrder = async function(orderId, e) {
+window.deleteOrder = async (orderId, e) => {
   e.stopPropagation();
   if (!confirm('Radera beställningen?')) return;
-  try {
-    await deleteDoc(doc(db, 'orders', orderId));
-  } catch(err) {
-    showToast('Fel: ' + err.message, true);
-  }
+  try { await deleteDoc(doc(db, 'orders', orderId)); }
+  catch(err) { showToast('Fel: ' + err.message, true); }
 };
 </script>
 </body>
