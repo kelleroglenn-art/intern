@@ -149,6 +149,17 @@ textarea.field::placeholder { color:#ccc; }
 #toast { position:fixed; top:66px; left:50%; transform:translateX(-50%); background:var(--green); color:#fff; font-family:'DM Mono',monospace; font-size:13px; padding:7px 18px; border-radius:20px; z-index:999; opacity:0; transition:opacity .25s; pointer-events:none; white-space:nowrap; }
 #toast.show { opacity:1; }
 #toast.error { background:var(--accent); }
+
+/* VERSION MODAL */
+.version-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:1000; display:flex; align-items:flex-end; justify-content:center; }
+.version-overlay.hidden { display:none; }
+.version-card { background:var(--surface); border-radius:20px 20px 0 0; padding:28px 24px 40px; width:100%; max-width:480px; }
+.version-tag { font-family:'DM Mono',monospace; font-size:10px; color:var(--accent); letter-spacing:.12em; text-transform:uppercase; margin-bottom:6px; }
+.version-title { font-family:'Syne',sans-serif; font-size:22px; font-weight:800; margin-bottom:16px; }
+.version-list { list-style:none; margin-bottom:24px; }
+.version-list li { font-family:'DM Sans',sans-serif; font-size:15px; color:var(--ink); padding:6px 0; border-bottom:1px solid var(--border); display:flex; gap:10px; }
+.version-list li:last-child { border-bottom:none; }
+.version-list li::before { content:'✓'; color:var(--green); font-weight:700; flex-shrink:0; }
 </style>
 </head>
 <body>
@@ -266,6 +277,22 @@ textarea.field::placeholder { color:#ccc; }
   </div>
 </div>
 
+<!-- VERSION MODAL -->
+<div class="version-overlay hidden" id="version-overlay">
+  <div class="version-card">
+    <div class="version-tag">Uppdatering</div>
+    <div class="version-title">Version 1.4</div>
+    <ul class="version-list">
+      <li>Beställningar öppnas direkt i butiksvyn</li>
+      <li>Skicka-knappen fungerar för flera beställningar i rad</li>
+      <li>Större text i formulärfält</li>
+      <li>Projektnummer helt redigerbart</li>
+      <li>Timeout-varning vid dåligt wifi</li>
+    </ul>
+    <button class="btn btn-red" onclick="closeVersion()">Okej, kör!</button>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <!-- ZXing och JsBarcode laddas först -->
@@ -295,6 +322,18 @@ let zxingReader = null;
 let lastCode = '', lastTime = 0;
 let toastTimer = null;
 let storeUnsubscribe = null;
+
+const CURRENT_VERSION = '1.4';
+
+// Visa versionsinfo om ny version
+if (localStorage.getItem('kg_version') !== CURRENT_VERSION) {
+  document.getElementById('version-overlay').classList.remove('hidden');
+}
+
+window.closeVersion = () => {
+  localStorage.setItem('kg_version', CURRENT_VERSION);
+  document.getElementById('version-overlay').classList.add('hidden');
+};
 
 // Live badge
 onSnapshot(query(ordersRef), snap => {
@@ -497,7 +536,14 @@ window.sendOrder = async () => {
   }
 };
 
-window.reset = () => { state = { name: '', project: '', items: [] }; window.go('s-start'); };
+window.reset = () => {
+  state = { name: '', project: '', items: [] };
+  // Återställ skicka-knappen
+  const btn = document.getElementById('send-btn');
+  btn.disabled = false;
+  btn.textContent = '📤 Skicka beställning';
+  window.go('s-start');
+};
 
 window.openStore = () => {
   window.go('s-store');
